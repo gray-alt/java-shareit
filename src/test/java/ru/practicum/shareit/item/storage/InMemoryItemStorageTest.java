@@ -23,7 +23,7 @@ public class InMemoryItemStorageTest {
 
     @BeforeEach
     public void beforeEach() {
-        if (userStorage.isUserNotExist(1L)) {
+        if (userStorage.isNotExist(1L)) {
             User newUser = User.builder()
                     .name("New user")
                     .email("User@email.ru")

@@ -82,17 +82,17 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public boolean isUserExist(Long userId) {
+    public boolean isExist(Long userId) {
         return users.containsKey(userId);
     }
 
     @Override
-    public boolean isUserNotExist(Long userId) {
+    public boolean isNotExist(Long userId) {
         return !users.containsKey(userId);
     }
 
     @Override
-    public boolean isUserExistByMail(String email) {
+    public boolean isExistByMail(String email) {
         return usersByEmail.containsKey(email);
     }
 }

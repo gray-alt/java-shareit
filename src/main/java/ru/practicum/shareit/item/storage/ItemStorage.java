@@ -21,7 +21,7 @@ public interface ItemStorage {
 
     Collection<Item> getItemsBySearch(String textForSearch);
 
-    boolean isItemExist(Long ownerId, Long itemId);
+    boolean isExist(Long ownerId, Long itemId);
 
-    boolean isNotItemExist(Long ownerId, Long itemId);
+    boolean isNotExist(Long ownerId, Long itemId);
 }

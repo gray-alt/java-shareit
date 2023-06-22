@@ -23,30 +23,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> addUser(User user) {
-        if (userStorage.isUserExistByMail(user.getEmail())) {
+    public User addUser(User user) {
+        if (userStorage.isExistByMail(user.getEmail())) {
             throw new AlreadyExistException("Пользователь уже существует с email " + user.getEmail());
         }
-        return userStorage.addUser(user);
+        return userStorage.addUser(user).orElseThrow();
     }
 
     @Override
-    public Optional<User> updateUser(Long userId, User user) {
-        Optional<User> foundUserById = userStorage.getUserById(userId);
-        if (foundUserById.isEmpty()) {
-            throw new NotFoundException("Не найден пользователь с id " + user.getId());
-        }
-
+    public User updateUser(Long userId, User user) {
         Optional<User> foundUserByMail = userStorage.getUserByEmail(user.getEmail());
-        if (foundUserByMail.isPresent() && !foundUserByMail.equals(foundUserById)) {
-            throw new AlreadyExistException("Пользователь уже существует с email " + user.getEmail());
-        }
-        return userStorage.updateUser(userId, user);
+        foundUserByMail.ifPresent(u -> {
+                    if (!userId.equals(u.getId()))
+                        throw new AlreadyExistException("Пользователь уже существует с email " + user.getEmail());
+                }
+        );
+
+        return userStorage.updateUser(userId, user)
+                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + user.getId()));
     }
 
     @Override
     public void deleteUser(Long userId) {
-        if (userStorage.isUserNotExist(userId)) {
+        if (userStorage.isNotExist(userId)) {
             throw new NotFoundException("Не найден пользователь с id " + userId);
         }
         itemStorage.deleteAllOwnerItems(userId);
@@ -59,11 +58,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> getUserById(Long userId) {
+    public User getUserById(Long userId) {
         Optional<User> optionalUser = userStorage.getUserById(userId);
-        if (optionalUser.isEmpty()) {
-            throw new NotFoundException("Не найден пользователь с id " + userId);
-        }
-        return optionalUser;
+        return optionalUser.orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + userId));
     }
 }

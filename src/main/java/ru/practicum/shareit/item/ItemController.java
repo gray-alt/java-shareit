@@ -9,7 +9,6 @@ import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -22,24 +21,21 @@ public class ItemController {
     }
 
     @PostMapping
-    public Optional<ItemDto> addItem(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId,
+    public ItemDto addItem(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId,
                                      @Valid @RequestBody ItemDto itemDto) {
-        Optional<Item> optionalItem = itemService.addItem(ownerId, ItemMapper.toItem(itemDto));
-        return Optional.of(ItemMapper.toItemDto(optionalItem.orElseThrow()));
+        return ItemMapper.toItemDto(itemService.addItem(ownerId, ItemMapper.toItem(itemDto)));
     }
 
     @PatchMapping("/{itemId}")
-    public Optional<ItemDto> updateItem(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId,
+    public ItemDto updateItem(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId,
                                         @PathVariable Long itemId,
                                         @RequestBody ItemDto itemDto) {
-        Optional<Item> optionalItem = itemService.updateItem(ownerId, itemId, ItemMapper.toItem(itemDto));
-        return Optional.of(ItemMapper.toItemDto(optionalItem.orElseThrow()));
+        return ItemMapper.toItemDto(itemService.updateItem(ownerId, itemId, ItemMapper.toItem(itemDto)));
     }
 
     @GetMapping("/{itemId}")
-    public Optional<ItemDto> getItemById(@PathVariable Long itemId) {
-        Optional<Item> optionalItem = itemService.getItemById(itemId);
-        return Optional.of(ItemMapper.toItemDto(optionalItem.orElseThrow()));
+    public ItemDto getItemById(@PathVariable Long itemId) {
+        return ItemMapper.toItemDto(itemService.getItemById(itemId));
     }
 
     @GetMapping

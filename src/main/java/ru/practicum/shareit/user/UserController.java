@@ -9,7 +9,6 @@ import ru.practicum.shareit.user.service.UserService;
 
 import javax.validation.Valid;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -22,16 +21,14 @@ public class UserController {
     }
 
     @PostMapping
-    public Optional<UserDto> addUser(@Valid @RequestBody UserDto userDto) {
-        Optional<User> optionalUser = userService.addUser(UserMapper.toUser(userDto));
-        return Optional.of(UserMapper.toUserDto(optionalUser.orElseThrow()));
+    public UserDto addUser(@Valid @RequestBody UserDto userDto) {
+        return UserMapper.toUserDto(userService.addUser(UserMapper.toUser(userDto)));
     }
 
     @PatchMapping("/{userId}")
-    public Optional<UserDto> updateUser(@PathVariable Long userId,
-                                        @RequestBody UserDto userDto) {
-        Optional<User> optionalUser = userService.updateUser(userId, UserMapper.toUser(userDto));
-        return Optional.of(UserMapper.toUserDto(optionalUser.orElseThrow()));
+    public UserDto updateUser(@PathVariable Long userId,
+                              @RequestBody UserDto userDto) {
+        return UserMapper.toUserDto(userService.updateUser(userId, UserMapper.toUser(userDto)));
     }
 
     @GetMapping
@@ -41,9 +38,8 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public Optional<UserDto> getUserById(@PathVariable Long userId) {
-        Optional<User> optionalUser = userService.getUserById(userId);
-        return Optional.of(UserMapper.toUserDto(optionalUser.orElseThrow()));
+    public UserDto getUserById(@PathVariable Long userId) {
+        return UserMapper.toUserDto(userService.getUserById(userId));
     }
 
     @DeleteMapping("/{userId}")

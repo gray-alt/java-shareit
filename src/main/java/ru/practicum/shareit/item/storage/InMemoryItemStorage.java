@@ -125,7 +125,7 @@ public class InMemoryItemStorage implements ItemStorage {
     }
 
     @Override
-    public boolean isItemExist(Long ownerId, Long itemId) {
+    public boolean isExist(Long ownerId, Long itemId) {
         if (itemsByOwner.containsKey(ownerId)) {
             return itemsByOwner.get(ownerId).containsKey(itemId);
         }
@@ -133,7 +133,7 @@ public class InMemoryItemStorage implements ItemStorage {
     }
 
     @Override
-    public boolean isNotItemExist(Long ownerId, Long itemId) {
-        return !isItemExist(ownerId, itemId);
+    public boolean isNotExist(Long ownerId, Long itemId) {
+        return !isExist(ownerId, itemId);
     }
 }

@@ -24,34 +24,28 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Optional<Item> addItem(Long ownerId, Item item) {
-        Optional<User> optionalUser = userStorage.getUserById(ownerId);
-        if (optionalUser.isEmpty()) {
-            throw new NotFoundException("Не найден пользователь с id " + ownerId);
-        }
-        return itemStorage.addItem(optionalUser.get(), item);
+    public Item addItem(Long ownerId, Item item) {
+        User user = userStorage.getUserById(ownerId)
+                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
+
+        return itemStorage.addItem(user, item).orElseThrow();
     }
 
     @Override
-    public Optional<Item> updateItem(Long ownerId, Long itemId, Item item) {
-        Optional<User> optionalUser = userStorage.getUserById(ownerId);
-        if (optionalUser.isEmpty()) {
-            throw new NotFoundException("Не найден пользователь с id " + ownerId);
-        }
+    public Item updateItem(Long ownerId, Long itemId, Item item) {
+        User user = userStorage.getUserById(ownerId)
+                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
 
-        Optional<Item> optionalItem = itemStorage.updateItem(optionalUser.get(), itemId, item);
-        if (optionalItem.isEmpty()) {
-            throw new NotFoundException("Не найдена вещь с id " + itemId +
-                    " у владельца с id " + ownerId);
-        }
-        return optionalItem;
+        Optional<Item> optionalItem = itemStorage.updateItem(user, itemId, item);
+        return optionalItem.orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId +
+                " у владельца с id " + ownerId));
     }
 
     @Override
     public void deleteItem(Long ownerId, Long itemId) {
-        if (userStorage.isUserNotExist(ownerId)) {
+        if (userStorage.isNotExist(ownerId)) {
             throw new NotFoundException("Не найден пользователь с id " + ownerId);
-        } else if (itemStorage.isNotItemExist(ownerId, itemId)) {
+        } else if (itemStorage.isNotExist(ownerId, itemId)) {
             throw new NotFoundException("Не найдена вещь с id " + itemId +
                     " у владельца с id " + ownerId);
         }
@@ -60,7 +54,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public void deleteAllOwnerItems(Long ownerId) {
-        if (userStorage.isUserNotExist(ownerId)) {
+        if (userStorage.isNotExist(ownerId)) {
             throw new NotFoundException("Не найден пользователь с id " + ownerId);
         }
         itemStorage.deleteAllOwnerItems(ownerId);
@@ -68,19 +62,16 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<Item> getAllItemsByOwnerId(Long ownerId) {
-        if (userStorage.isUserNotExist(ownerId)) {
+        if (userStorage.isNotExist(ownerId)) {
             throw new NotFoundException("Не найден пользователь с id " + ownerId);
         }
         return itemStorage.getAllItemsByOwnerId(ownerId);
     }
 
     @Override
-    public Optional<Item> getItemById(Long itemId) {
+    public Item getItemById(Long itemId) {
         Optional<Item> optionalItem = itemStorage.getItemById(itemId);
-        if (optionalItem.isEmpty()) {
-            throw new NotFoundException("Не найдена вещь с id " + itemId);
-        }
-        return optionalItem;
+        return optionalItem.orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
     }
 
     @Override
