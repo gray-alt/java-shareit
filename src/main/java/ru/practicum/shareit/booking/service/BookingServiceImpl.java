@@ -53,7 +53,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotAllowedException("Вещь с id " + item.getId() + " недоступна для бронирования");
         }
 
-        if(item.getOwnerOfItemId().equals(bookerId)) {
+        if (item.getOwnerOfItemId().equals(bookerId)) {
             throw new NotFoundException("Нельзя забронировать собственную вещь");
         }
 
