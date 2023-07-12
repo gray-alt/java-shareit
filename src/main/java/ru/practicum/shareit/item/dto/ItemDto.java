@@ -23,6 +23,4 @@ public class ItemDto {
     String description;
     @NotNull(message = "Не указана доступность для аренды")
     Boolean available;
-    Long ownerId;
-    Long requestId;
 }

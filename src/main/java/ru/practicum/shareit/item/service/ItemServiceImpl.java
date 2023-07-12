@@ -1,84 +1,151 @@
 package ru.practicum.shareit.item.service;
 
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.storage.BookingRepository;
+import ru.practicum.shareit.comment.dto.CommentDto;
+import ru.practicum.shareit.comment.dto.CommentMapper;
+import ru.practicum.shareit.comment.model.Comment;
+import ru.practicum.shareit.comment.storage.CommentRepository;
+import ru.practicum.shareit.exception.NotAllowedException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.ItemWithBookingDto;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.storage.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Optional;
 
-@Component("itemServiceImpl")
+@Service("itemServiceImpl")
 public class ItemServiceImpl implements ItemService {
-    private final ItemStorage itemStorage;
-    private final UserStorage userStorage;
+    private final ItemRepository itemRepository;
+    private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
 
-    public ItemServiceImpl(@Qualifier("inMemoryItemStorage") ItemStorage itemStorage,
-                           @Qualifier("inMemoryUserStorage") UserStorage userStorage) {
-        this.itemStorage = itemStorage;
-        this.userStorage = userStorage;
+    public ItemServiceImpl(ItemRepository itemRepository,
+                           UserRepository userRepository,
+                           BookingRepository bookingRepository,
+                           CommentRepository commentRepository) {
+        this.itemRepository = itemRepository;
+        this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
     }
 
     @Override
-    public Item addItem(Long ownerId, Item item) {
-        User user = userStorage.getUserById(ownerId)
+    public ItemDto addItem(Long ownerId, ItemDto itemDto) {
+        User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
-
-        return itemStorage.addItem(user, item).orElseThrow();
+        Item item = itemRepository.save(ItemMapper.mapToItem(itemDto, owner));
+        return ItemMapper.mapToItemDto(item);
     }
 
     @Override
-    public Item updateItem(Long ownerId, Long itemId, Item item) {
-        User user = userStorage.getUserById(ownerId)
+    public ItemDto updateItem(Long ownerId, Long itemId, ItemDto itemDto) {
+        User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
-
-        Optional<Item> optionalItem = itemStorage.updateItem(user, itemId, item);
-        return optionalItem.orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId +
-                " у владельца с id " + ownerId));
+        Item foundItem = itemRepository.findByIdAndOwnerId(itemId, ownerId)
+                .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId +
+                        " у владельца с id " + ownerId));
+        Item item = itemRepository.save(foundItem.withItem(ItemMapper.mapToItem(itemDto, owner)));
+        return ItemMapper.mapToItemDto(item);
     }
 
     @Override
     public void deleteItem(Long ownerId, Long itemId) {
-        if (userStorage.isNotExist(ownerId)) {
+        if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException("Не найден пользователь с id " + ownerId);
-        } else if (itemStorage.isNotExist(ownerId, itemId)) {
+        } else if (itemRepository.existsByIdAndOwnerId(itemId, ownerId)) {
             throw new NotFoundException("Не найдена вещь с id " + itemId +
                     " у владельца с id " + ownerId);
         }
-        itemStorage.deleteItem(ownerId, itemId);
+        itemRepository.deleteByIdAndOwnerId(itemId, ownerId);
     }
 
     @Override
     public void deleteAllOwnerItems(Long ownerId) {
-        if (userStorage.isNotExist(ownerId)) {
+        if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException("Не найден пользователь с id " + ownerId);
         }
-        itemStorage.deleteAllOwnerItems(ownerId);
+        itemRepository.deleteAllByOwnerId(ownerId);
     }
 
     @Override
-    public Collection<Item> getAllItemsByOwnerId(Long ownerId) {
-        if (userStorage.isNotExist(ownerId)) {
+    public Collection<ItemWithBookingDto> getAllItemsByOwnerId(Long ownerId) {
+        if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException("Не найден пользователь с id " + ownerId);
         }
-        return itemStorage.getAllItemsByOwnerId(ownerId);
+        Collection<Item> items = itemRepository.findAllByOwnerIdOrderById(ownerId);
+        Collection<ItemWithBookingDto> itemWithBookingDtos = new ArrayList<>();
+
+        LocalDateTime nowDateTime = LocalDateTime.now();
+
+        for (Item item : items) {
+            itemWithBookingDtos.add(
+                    ItemMapper.mapToItemWithBookingDto(
+                            item,
+                            bookingRepository.findTop1ByItemIdAndItemOwnerIdAndStatusAndStartLessThanOrderByEndDesc(
+                                    item.getId(), ownerId, BookingStatus.APPROVED, nowDateTime),
+                            bookingRepository.findTop1ByItemIdAndItemOwnerIdAndStatusAndStartGreaterThanOrderByStartAsc(
+                                    item.getId(), ownerId, BookingStatus.APPROVED, nowDateTime),
+                            commentRepository.findAllByItemId(item.getId())
+                    )
+            );
+        }
+        return itemWithBookingDtos;
     }
 
     @Override
-    public Item getItemById(Long itemId) {
-        Optional<Item> optionalItem = itemStorage.getItemById(itemId);
-        return optionalItem.orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
+    public ItemWithBookingDto getItemById(Long itemId, Long userId) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
+
+        if (!userRepository.existsById(userId)) {
+                throw new NotFoundException("Не найден пользователь с id " + userId);
+        }
+
+        LocalDateTime nowDateTime = LocalDateTime.now();
+
+        return ItemMapper.mapToItemWithBookingDto(
+                item,
+                bookingRepository.findTop1ByItemIdAndItemOwnerIdAndStatusAndStartLessThanOrderByEndDesc(itemId, userId,
+                        BookingStatus.APPROVED, nowDateTime),
+                bookingRepository.findTop1ByItemIdAndItemOwnerIdAndStatusAndStartGreaterThanOrderByStartAsc(itemId,
+                        userId, BookingStatus.APPROVED, nowDateTime),
+                commentRepository.findAllByItemId(itemId)
+        );
     }
 
     @Override
-    public Collection<Item> getItemsBySearch(String textForSearch) {
+    public Collection<ItemDto> getItemsBySearch(String textForSearch) {
         if (textForSearch.isEmpty()) {
             return new ArrayList<>();
         }
-        return itemStorage.getItemsBySearch(textForSearch);
+        Collection<Item> items = itemRepository.findAllBySearch(textForSearch);
+        return ItemMapper.mapToItemDto(items);
+    }
+
+    @Override
+    public CommentDto addComment(Long authorId, Long itemId, CommentDto commentDto) {
+        if (!bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndLessThan(itemId, authorId,
+                BookingStatus.APPROVED, LocalDateTime.now())) {
+            throw new NotAllowedException("Не найдена ни одна завершенная аренда");
+        }
+        User author = userRepository.findById(authorId)
+                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + authorId));
+
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
+
+        Comment comment = commentRepository.save(CommentMapper.mapToComment(commentDto, author, item,
+                LocalDateTime.now()));
+
+        return CommentMapper.mapToCommentDto(comment);
     }
 }

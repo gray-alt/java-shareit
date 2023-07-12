@@ -1,65 +1,58 @@
 package ru.practicum.shareit.user.service;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.AlreadyExistException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.util.Collection;
-import java.util.Optional;
 
 @Service("userServiceImpl")
 public class UserServiceImpl implements UserService {
-    private final UserStorage userStorage;
-    private final ItemStorage itemStorage;
+    private final UserRepository userRepository;
 
-    public UserServiceImpl(@Qualifier("inMemoryUserStorage") UserStorage userStorage,
-                           @Qualifier("inMemoryItemStorage") ItemStorage itemStorage) {
-        this.userStorage = userStorage;
-        this.itemStorage = itemStorage;
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @Override
-    public User addUser(User user) {
-        if (userStorage.isExistByMail(user.getEmail())) {
-            throw new AlreadyExistException("Пользователь уже существует с email " + user.getEmail());
+    public UserDto addUser(UserDto userDto) {
+        User user = userRepository.save(UserMapper.mapToUser(userDto));
+        return UserMapper.mapToUserDto(user);
+    }
+
+    @Override
+    public UserDto updateUser(Long userId, UserDto userDto) {
+        if (userRepository.existsByEmailAndIdNot(userDto.getEmail(), userId)) {
+            throw new AlreadyExistException("Пользователь уже существует с email " + userDto.getEmail());
         }
-        return userStorage.addUser(user).orElseThrow();
-    }
-
-    @Override
-    public User updateUser(Long userId, User user) {
-        Optional<User> foundUserByMail = userStorage.getUserByEmail(user.getEmail());
-        foundUserByMail.ifPresent(u -> {
-                    if (!userId.equals(u.getId()))
-                        throw new AlreadyExistException("Пользователь уже существует с email " + user.getEmail());
-                }
-        );
-
-        return userStorage.updateUser(userId, user)
-                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + user.getId()));
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + userId));
+        User user = userRepository.save(foundUser.withUser(UserMapper.mapToUser(userDto)));
+        return UserMapper.mapToUserDto(user);
     }
 
     @Override
     public void deleteUser(Long userId) {
-        if (userStorage.isNotExist(userId)) {
+        if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Не найден пользователь с id " + userId);
         }
-        itemStorage.deleteAllOwnerItems(userId);
-        userStorage.deleteUser(userId);
+        userRepository.deleteById(userId);
     }
 
     @Override
-    public Collection<User> getAllUsers() {
-        return userStorage.getAllUsers();
+    public Collection<UserDto> getAllUsers() {
+        Collection<User> users = userRepository.findAll();
+        return UserMapper.mapToUserDto(users);
     }
 
     @Override
-    public User getUserById(Long userId) {
-        Optional<User> optionalUser = userStorage.getUserById(userId);
-        return optionalUser.orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + userId));
+    public UserDto getUserById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + userId));
+        return UserMapper.mapToUserDto(user);
     }
 }

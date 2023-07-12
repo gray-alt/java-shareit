@@ -11,7 +11,6 @@ public class ItemRequestMapper {
                 .id(itemRequest.getId())
                 .description(itemRequest.getDescription())
                 .requestorId(Optional.ofNullable(itemRequest.getRequestor()).map(User::getId).orElse(null))
-                .created(itemRequest.getCreated())
                 .build();
     }
 }
