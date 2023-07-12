@@ -23,7 +23,6 @@ public class UserMapper {
     }
 
     public static Collection<UserDto> mapToUserDto(Collection<User> users) {
-        Collection<UserDto> userDtos = users.stream().map(UserMapper::mapToUserDto).collect(Collectors.toList());
-        return userDtos;
+        return users.stream().map(UserMapper::mapToUserDto).collect(Collectors.toList());
     }
 }

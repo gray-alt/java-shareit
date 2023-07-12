@@ -23,7 +23,6 @@ public class ItemServiceImplTest {
     private final ItemService itemService;
     private final UserService userService;
     private final BookingService bookingService;
-    private UserDto owner;
 
     @Test
     public void testGetItemById() {

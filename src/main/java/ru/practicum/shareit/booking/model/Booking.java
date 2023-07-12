@@ -62,7 +62,7 @@ public class Booking {
     }
 
     public Long getOwnerOfItemId() {
-        return Optional.of(this.item).map(Item::getOwnerOfItemId).orElse(null);
+        return Optional.ofNullable(this.item).map(Item::getOwnerOfItemId).orElse(null);
     }
 
     @Override

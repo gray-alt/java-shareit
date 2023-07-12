@@ -31,8 +31,7 @@ public class ItemMapper {
     }
 
     public static Collection<ItemDto> mapToItemDto(Collection<Item> items) {
-        Collection<ItemDto> itemDtos = items.stream().map(ItemMapper::mapToItemDto).collect(Collectors.toList());
-        return itemDtos;
+        return items.stream().map(ItemMapper::mapToItemDto).collect(Collectors.toList());
     }
 
     public static ItemWithBookingDto mapToItemWithBookingDto(Item item, Booking lastBooking, Booking nextBooking,

@@ -102,7 +102,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("Не найден пользователь с id " + bookerId);
         }
 
-        Collection<Booking> bookings = new ArrayList<>();
+        Collection<Booking> bookings;
 
         switch (state) {
             case ALL:
