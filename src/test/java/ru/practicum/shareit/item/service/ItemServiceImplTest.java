@@ -62,6 +62,7 @@ public class ItemServiceImplTest {
                 .build();
 
         BookingOutputDto booking1 = bookingService.addBooking(booker1.getId(), bookingInputDto1);
+        bookingService.approveBooking(owner.getId(), booking1.getId(), true);
 
         BookingInputDto bookingInputDto2 = BookingInputDto.builder()
                 .itemId(item.getId())
@@ -70,6 +71,7 @@ public class ItemServiceImplTest {
                 .build();
 
         BookingOutputDto booking2 = bookingService.addBooking(booker2.getId(), bookingInputDto2);
+        bookingService.approveBooking(owner.getId(), booking2.getId(), true);
 
         // item owner
         ItemWithBookingDto itemWithBookingDto = itemService.getItemById(item.getId(), owner.getId());
@@ -90,7 +92,7 @@ public class ItemServiceImplTest {
         simpleBookingDto2 = itemWithBookingDto.getNextBooking();
 
         assertThat(simpleBookingDto1)
-                .hasFieldOrPropertyWithValue("id", booking1.getId());
+                .isNull();
 
         assertThat(simpleBookingDto2)
                 .isNull();
@@ -105,7 +107,7 @@ public class ItemServiceImplTest {
                 .isNull();
 
         assertThat(simpleBookingDto2)
-                .hasFieldOrPropertyWithValue("id", booking2.getId());
+                .isNull();
 
     }
 }

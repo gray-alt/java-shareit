@@ -24,10 +24,10 @@ public class Booking {
     LocalDateTime start;
     @Column(name = "end_date", nullable = false)
     LocalDateTime end;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
     Item item;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "booker_id", nullable = false)
     User booker;
     @Enumerated(EnumType.STRING)
