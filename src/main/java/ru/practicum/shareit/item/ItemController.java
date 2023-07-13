@@ -1,6 +1,6 @@
 package ru.practicum.shareit.item;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -10,14 +10,11 @@ import ru.practicum.shareit.item.service.ItemService;
 import javax.validation.Valid;
 import java.util.Collection;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/items")
 public class ItemController {
     private final ItemService itemService;
-
-    public ItemController(@Qualifier("itemServiceImpl") ItemService itemService) {
-        this.itemService = itemService;
-    }
 
     @PostMapping
     public ItemDto addItem(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId,
@@ -35,12 +32,14 @@ public class ItemController {
     @GetMapping("/{itemId}")
     public ItemWithBookingDto getItemById(@RequestHeader(name = "X-Sharer-User-Id") Long userId,
                                           @PathVariable Long itemId) {
-        return itemService.getItemById(itemId, userId);
+        //return itemService.getItemById(itemId, userId);
+        return itemService.getItemByIdAlternativeQuery(itemId, userId);
     }
 
     @GetMapping
     public Collection<ItemWithBookingDto> getAllItemsBuOwnerId(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId) {
-        return itemService.getAllItemsByOwnerId(ownerId);
+        //return itemService.getAllItemsByOwnerId(ownerId);
+        return itemService.getAllItemsByOwnerIdAlternativeQuery(ownerId);
     }
 
     @GetMapping("/search")

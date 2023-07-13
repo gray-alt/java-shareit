@@ -4,16 +4,17 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.practicum.shareit.booking.dto.BookingInputDto;
-import ru.practicum.shareit.booking.dto.BookingOutputDto;
+import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.SimpleBookingDto;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemWithBookingDto;
+import ru.practicum.shareit.item.model.ItemWithBooking;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,22 +56,22 @@ public class ItemServiceImplTest {
 
         ItemDto item = itemService.addItem(owner.getId(), itemDto);
 
-        BookingInputDto bookingInputDto1 = BookingInputDto.builder()
+        BookingDto bookingDto1 = BookingDto.builder()
                 .itemId(item.getId())
                 .start(LocalDateTime.now().minusMinutes(5))
                 .end(LocalDateTime.now().minusMinutes(2))
                 .build();
 
-        BookingOutputDto booking1 = bookingService.addBooking(booker1.getId(), bookingInputDto1);
+        BookingDto booking1 = bookingService.addBooking(booker1.getId(), bookingDto1);
         bookingService.approveBooking(owner.getId(), booking1.getId(), true);
 
-        BookingInputDto bookingInputDto2 = BookingInputDto.builder()
+        BookingDto bookingDto2 = BookingDto.builder()
                 .itemId(item.getId())
                 .start(LocalDateTime.now().plusMinutes(2))
                 .end(LocalDateTime.now().plusMinutes(5))
                 .build();
 
-        BookingOutputDto booking2 = bookingService.addBooking(booker2.getId(), bookingInputDto2);
+        BookingDto booking2 = bookingService.addBooking(booker2.getId(), bookingDto2);
         bookingService.approveBooking(owner.getId(), booking2.getId(), true);
 
         // item owner
@@ -109,5 +110,19 @@ public class ItemServiceImplTest {
         assertThat(simpleBookingDto2)
                 .isNull();
 
+        // new search item
+        ItemWithBookingDto newItem = itemService.getItemByIdAlternativeQuery(item.getId(), booker1.getId());
+
+        assertThat(newItem).hasFieldOrPropertyWithValue("lastBooking", null);
+        assertThat(newItem).hasFieldOrPropertyWithValue("nextBooking", null);
+
+        newItem = itemService.getItemByIdAlternativeQuery(item.getId(), owner.getId());
+
+        assertThat(newItem.getLastBooking()).hasFieldOrPropertyWithValue("id", booking1.getId());
+        assertThat(newItem.getNextBooking()).hasFieldOrPropertyWithValue("id", booking2.getId());
+
+        // new search all items
+        Collection<ItemWithBookingDto> newItems = itemService.getAllItemsByOwnerIdAlternativeQuery(owner.getId());
+        assertThat(newItems).size().isEqualTo(1);
     }
 }

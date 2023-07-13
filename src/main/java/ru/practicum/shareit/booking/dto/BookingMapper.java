@@ -12,18 +12,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class BookingMapper {
-    public static BookingOutputDto mapToBookingDto(Booking booking) {
-        return BookingOutputDto.builder()
-                .id(booking.getId())
-                .start(booking.getStart())
-                .end(booking.getEnd())
-                .item(ItemMapper.mapToItemDto(booking.getItem()))
-                .booker(UserMapper.mapToUserDto(booking.getBooker()))
-                .status(booking.getStatus())
-                .build();
-    }
 
-    public static Booking mapToBooking(BookingInputDto bookingDto, Item item, User booker) {
+    public static Booking mapToBooking(BookingDto bookingDto, Item item, User booker) {
         return Booking.builder()
                 .id(bookingDto.getId())
                 .start(bookingDto.getStart())
@@ -34,7 +24,18 @@ public class BookingMapper {
                 .build();
     }
 
-    public static Collection<BookingOutputDto> mapToBookingDto(Collection<Booking> bookings) {
+    public static BookingDto mapToBookingDto(Booking booking) {
+        return BookingDto.builder()
+                .id(booking.getId())
+                .start(booking.getStart())
+                .end(booking.getEnd())
+                .item(ItemMapper.mapToItemDto(booking.getItem()))
+                .booker(UserMapper.mapToUserDto(booking.getBooker()))
+                .status(booking.getStatus())
+                .build();
+    }
+
+    public static Collection<BookingDto> mapToBookingDto(Collection<Booking> bookings) {
         return bookings.stream().map(BookingMapper::mapToBookingDto).collect(Collectors.toList());
     }
 

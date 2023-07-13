@@ -1,10 +1,12 @@
 package ru.practicum.shareit.item.dto;
 
 import ru.practicum.shareit.booking.dto.BookingMapper;
+import ru.practicum.shareit.booking.dto.SimpleBookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.comment.dto.CommentMapper;
 import ru.practicum.shareit.comment.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.model.ItemWithBooking;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
@@ -43,6 +45,19 @@ public class ItemMapper {
                 .available(item.getAvailable())
                 .lastBooking(BookingMapper.mapToSimpleBookingDto(lastBooking))
                 .nextBooking(BookingMapper.mapToSimpleBookingDto(nextBooking))
+                .comments(CommentMapper.mapToCommentDto(comments))
+                .build();
+    }
+
+    public static ItemWithBookingDto mapToItemWithBookingAlternativeQueryDto(ItemWithBooking item,
+                                                                             Collection<Comment> comments) {
+        return ItemWithBookingDto.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.getAvailable())
+                .lastBooking(BookingMapper.mapToSimpleBookingDto(item.getLastBooking()))
+                .nextBooking(BookingMapper.mapToSimpleBookingDto(item.getNextBooking()))
                 .comments(CommentMapper.mapToCommentDto(comments))
                 .build();
     }

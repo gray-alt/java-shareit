@@ -6,10 +6,12 @@ import lombok.experimental.FieldDefaults;
 import javax.persistence.*;
 import java.util.Objects;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
+@Setter
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "users")
 public class User {
@@ -20,20 +22,6 @@ public class User {
     String name;
     @Column(nullable = false, unique = true)
     String email;
-
-    public User() {
-        this.id = null;
-        this.name = null;
-        this.email = null;
-    }
-
-    public User withUser(User user) {
-        return User.builder()
-                .id(this.getId())
-                .name(user.getName() != null ? user.getName() : this.getName())
-                .email(user.getEmail() != null ? user.getEmail() : this.getEmail())
-                .build();
-    }
 
     @Override
     public boolean equals(Object o) {

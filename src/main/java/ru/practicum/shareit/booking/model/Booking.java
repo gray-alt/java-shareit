@@ -10,10 +10,12 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
+@Setter
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "bookings")
 public class Booking {
@@ -32,26 +34,6 @@ public class Booking {
     User booker;
     @Enumerated(EnumType.STRING)
     BookingStatus status;
-
-    public Booking() {
-        this.id = null;
-        this.start = null;
-        this.end = null;
-        this.item = null;
-        this.booker = null;
-        this.status = null;
-    }
-
-    public Booking withStatus(BookingStatus status) {
-        return Booking.builder()
-                .id(this.getId())
-                .start(this.getStart())
-                .end(this.getEnd())
-                .item(this.getItem())
-                .booker(this.booker)
-                .status(status)
-                .build();
-    }
 
     public Long getItemOfBookingId() {
         return Optional.ofNullable(this.item).map(Item::getId).orElse(null);

@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.storage.BookingRepository;
@@ -13,30 +14,25 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.dto.ItemWithBookingDto;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.model.ItemWithBooking;
 import ru.practicum.shareit.item.storage.ItemRepository;
+import ru.practicum.shareit.item.storage.ItemWithBookingRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service("itemServiceImpl")
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
-
-    public ItemServiceImpl(ItemRepository itemRepository,
-                           UserRepository userRepository,
-                           BookingRepository bookingRepository,
-                           CommentRepository commentRepository) {
-        this.itemRepository = itemRepository;
-        this.userRepository = userRepository;
-        this.bookingRepository = bookingRepository;
-        this.commentRepository = commentRepository;
-    }
+    private final ItemWithBookingRepository itemWithBookingRepository;
 
     @Override
     public ItemDto addItem(Long ownerId, ItemDto itemDto) {
@@ -53,8 +49,20 @@ public class ItemServiceImpl implements ItemService {
         Item foundItem = itemRepository.findByIdAndOwnerId(itemId, ownerId)
                 .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId +
                         " у владельца с id " + ownerId));
-        Item item = itemRepository.save(foundItem.withItem(ItemMapper.mapToItem(itemDto, owner)));
-        return ItemMapper.mapToItemDto(item);
+
+        Item item = ItemMapper.mapToItem(itemDto, owner);
+
+         if (item.getName() != null) {
+             foundItem.setName(item.getName());
+         }
+         if (item.getDescription() != null) {
+             foundItem.setDescription(item.getDescription());
+         }
+         if (item.getAvailable() != null) {
+             foundItem.setAvailable(item.getAvailable());
+         }
+
+        return ItemMapper.mapToItemDto(itemRepository.save(foundItem));
     }
 
     @Override
@@ -90,10 +98,8 @@ public class ItemServiceImpl implements ItemService {
             itemWithBookingDtos.add(
                     ItemMapper.mapToItemWithBookingDto(
                             item,
-                            bookingRepository.findTop1ByItemIdAndItemOwnerIdAndStatusAndStartLessThanOrderByEndDesc(
-                                    item.getId(), ownerId, BookingStatus.APPROVED, nowDateTime),
-                            bookingRepository.findTop1ByItemIdAndItemOwnerIdAndStatusAndStartGreaterThanOrderByStartAsc(
-                                    item.getId(), ownerId, BookingStatus.APPROVED, nowDateTime),
+                            bookingRepository.findLastBookingForItem(item.getId(), ownerId, nowDateTime),
+                            bookingRepository.findNextBookingForItem(item.getId(), ownerId, nowDateTime),
                             commentRepository.findAllByItemId(item.getId())
                     )
             );
@@ -103,21 +109,19 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemWithBookingDto getItemById(Long itemId, Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("Не найден пользователь с id " + userId);
+        }
+
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
-
-        if (!userRepository.existsById(userId)) {
-                throw new NotFoundException("Не найден пользователь с id " + userId);
-        }
 
         LocalDateTime nowDateTime = LocalDateTime.now();
 
         return ItemMapper.mapToItemWithBookingDto(
                 item,
-                bookingRepository.findTop1ByItemIdAndItemOwnerIdAndStatusAndStartLessThanOrderByEndDesc(itemId, userId,
-                        BookingStatus.APPROVED, nowDateTime),
-                bookingRepository.findTop1ByItemIdAndItemOwnerIdAndStatusAndStartGreaterThanOrderByStartAsc(itemId,
-                        userId, BookingStatus.APPROVED, nowDateTime),
+                bookingRepository.findLastBookingForItem(itemId, userId, nowDateTime),
+                bookingRepository.findNextBookingForItem(itemId, userId, nowDateTime),
                 commentRepository.findAllByItemId(itemId)
         );
     }
@@ -147,5 +151,43 @@ public class ItemServiceImpl implements ItemService {
                 LocalDateTime.now()));
 
         return CommentMapper.mapToCommentDto(comment);
+    }
+
+    @Override
+    public ItemWithBookingDto getItemByIdAlternativeQuery(Long itemId, Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("Не найден пользователь с id " + userId);
+        }
+
+        LocalDateTime nowDateTime = LocalDateTime.now();
+
+        ItemWithBooking item = itemWithBookingRepository.findItemWithBookingById(itemId, userId, nowDateTime)
+                .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
+
+        return ItemMapper.mapToItemWithBookingAlternativeQueryDto(item, commentRepository.findAllByItemId(itemId));
+    }
+
+    @Override
+    public Collection<ItemWithBookingDto> getAllItemsByOwnerIdAlternativeQuery(Long ownerId) {
+        if (!userRepository.existsById(ownerId)) {
+            throw new NotFoundException("Не найден пользователь с id " + ownerId);
+        }
+        Collection<ItemWithBooking> items = itemWithBookingRepository.findItemWithBookingByOwnerId(ownerId,
+                LocalDateTime.now());
+
+        Collection<Comment> allComments = commentRepository.findAllByItemIdIn(
+                items.stream().map(ItemWithBooking::getId).collect(Collectors.toList()));
+
+        Collection<ItemWithBookingDto> itemWithBookingDtos = new ArrayList<>();
+
+        for (ItemWithBooking item : items) {
+            itemWithBookingDtos.add(ItemMapper.mapToItemWithBookingAlternativeQueryDto(item,
+                    allComments
+                            .stream()
+                            .filter(comment -> comment.getItemOfCommentId().equals(item.getId()))
+                            .collect(Collectors.toList())));
+        }
+
+        return itemWithBookingDtos;
     }
 }

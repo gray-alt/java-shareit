@@ -1,20 +1,20 @@
 package ru.practicum.shareit.comment.model;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
+@Setter
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "comments")
 public class Comment {
@@ -32,11 +32,7 @@ public class Comment {
     @Column(name = "create_date")
     LocalDateTime created;
 
-    public Comment() {
-        this.id = null;
-        this.text = null;
-        this.item = null;
-        this.author = null;
-        this.created = null;
+    public Long getItemOfCommentId() {
+        return Optional.ofNullable(item).map(Item::getId).orElse(null);
     }
 }
