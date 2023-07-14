@@ -1,21 +1,26 @@
 package ru.practicum.shareit.request;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.shareit.user.model.User;
 
-import java.time.LocalDateTime;
+import javax.persistence.*;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
+@Setter
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Entity
+@Table(name = "requests")
 public class ItemRequest {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
+    @Column(nullable = false)
     String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "requestor_id")
     User requestor;
-    LocalDateTime created;
 }
