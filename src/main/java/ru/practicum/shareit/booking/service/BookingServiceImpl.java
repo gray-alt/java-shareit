@@ -1,6 +1,9 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
@@ -87,36 +90,38 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Collection<BookingDto> getAllBookingsByBookerId(Long bookerId, BookingState state) {
+    public Collection<BookingDto> getAllBookingsByBookerId(Long bookerId, BookingState state, int from, int size) {
         if (!userRepository.existsById(bookerId)) {
             throw new NotFoundException("Не найден пользователь с id " + bookerId);
         }
 
         Collection<Booking> bookings;
+        PageRequest pageRequest = PageRequest.of(from, size, Sort.by("Start").descending());
 
         switch (state) {
             case ALL:
-                bookings = bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId);
+                bookings = bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId, pageRequest);
                 break;
             case CURRENT:
                 bookings = bookingRepository.findCurrentBookingsByBookerId(
                         bookerId,
                         LocalDateTime.now(),
-                        LocalDateTime.now());
+                        LocalDateTime.now(),
+                        pageRequest);
                 break;
             case PAST:
-                bookings = bookingRepository.findPastBookingsByBookerId(bookerId,
-                        LocalDateTime.now());
+                bookings = bookingRepository.findPastBookingsByBookerId(bookerId, LocalDateTime.now(), pageRequest);
                 break;
             case FUTURE:
-                bookings = bookingRepository.findFutureBookingsByBookerId(bookerId,
-                        LocalDateTime.now());
+                bookings = bookingRepository.findFutureBookingsByBookerId(bookerId, LocalDateTime.now(), pageRequest);
                 break;
             case WAITING:
-                bookings = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING);
+                bookings = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId,
+                        BookingStatus.WAITING, pageRequest);
                 break;
             case REJECTED:
-                bookings = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED);
+                bookings = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId,
+                        BookingStatus.REJECTED, pageRequest);
                 break;
             default:
                 bookings = new ArrayList<>();
@@ -125,7 +130,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Collection<BookingDto> getAllBookingsByItemOwnerId(Long itemOwnerId, BookingState state) {
+    public Collection<BookingDto> getAllBookingsByItemOwnerId(Long itemOwnerId, BookingState state, int from, int size) {
         if (!userRepository.existsById(itemOwnerId)) {
             throw new NotFoundException("Не найден пользователь с id " + itemOwnerId);
         }

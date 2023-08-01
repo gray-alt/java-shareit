@@ -121,7 +121,7 @@ public class ItemServiceImplTest {
         assertThat(newItem.getNextBooking()).hasFieldOrPropertyWithValue("id", booking2.getId());
 
         // new search all items
-        Collection<ItemWithBookingDto> newItems = itemService.getAllItemsByOwnerIdAlternativeQuery(owner.getId());
+        Collection<ItemWithBookingDto> newItems = itemService.getAllItemsByOwnerIdAlternativeQuery(owner.getId(), 0, 10);
         assertThat(newItems).size().isEqualTo(1);
     }
 }

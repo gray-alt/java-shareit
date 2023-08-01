@@ -37,14 +37,18 @@ public class ItemController {
     }
 
     @GetMapping
-    public Collection<ItemWithBookingDto> getAllItemsBuOwnerId(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId) {
+    public Collection<ItemWithBookingDto> getAllItemsBuOwnerId(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId,
+                                                               @RequestParam(defaultValue = "0") int from,
+                                                               @RequestParam(defaultValue = "10") int size) {
         //return itemService.getAllItemsByOwnerId(ownerId);
-        return itemService.getAllItemsByOwnerIdAlternativeQuery(ownerId);
+        return itemService.getAllItemsByOwnerIdAlternativeQuery(ownerId, from, size);
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> getItemsBySearch(@RequestParam(name = "text") String textForSearch) {
-        return itemService.getItemsBySearch(textForSearch);
+    public Collection<ItemDto> getItemsBySearch(@RequestParam(name = "text") String textForSearch,
+                                                @RequestParam(defaultValue = "0") int from,
+                                                @RequestParam(defaultValue = "10") int size) {
+        return itemService.getItemsBySearch(textForSearch, from, size);
     }
 
     @PostMapping("/{itemId}/comment")

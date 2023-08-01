@@ -17,6 +17,8 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.ItemWithBooking;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.item.storage.ItemWithBookingRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.storage.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserRepository;
 
@@ -33,12 +35,15 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
     private final ItemWithBookingRepository itemWithBookingRepository;
+    private final ItemRequestRepository itemRequestRepository;
 
     @Override
     public ItemDto addItem(Long ownerId, ItemDto itemDto) {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
-        Item item = itemRepository.save(ItemMapper.mapToItem(itemDto, owner));
+        ItemRequest itemRequest = itemRequestRepository.findById(itemDto.getRequestId()).orElse(null);
+
+        Item item = itemRepository.save(ItemMapper.mapToItem(itemDto, owner, itemRequest));
         return ItemMapper.mapToItemDto(item);
     }
 
@@ -50,7 +55,7 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId +
                         " у владельца с id " + ownerId));
 
-        Item item = ItemMapper.mapToItem(itemDto, owner);
+        Item item = ItemMapper.mapToItem(itemDto, owner, foundItem.getRequest());
 
          if (item.getName() != null) {
              foundItem.setName(item.getName());
@@ -127,7 +132,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemDto> getItemsBySearch(String textForSearch) {
+    public Collection<ItemDto> getItemsBySearch(String textForSearch, int from, int size) {
         if (textForSearch.isEmpty()) {
             return new ArrayList<>();
         }
@@ -168,7 +173,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemWithBookingDto> getAllItemsByOwnerIdAlternativeQuery(Long ownerId) {
+    public Collection<ItemWithBookingDto> getAllItemsByOwnerIdAlternativeQuery(Long ownerId, int from, int size) {
         if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException("Не найден пользователь с id " + ownerId);
         }
