@@ -2,7 +2,6 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -96,24 +95,24 @@ public class BookingServiceImpl implements BookingService {
         }
 
         Collection<Booking> bookings;
-        PageRequest pageRequest = PageRequest.of(from, size, Sort.by("Start").descending());
+        int page = from > 0 ? from / size : 0;
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("start").descending());
+        PageRequest nativePageRequest = PageRequest.of(page, size, Sort.by("start_date").descending());
+        LocalDateTime currentDate = LocalDateTime.now();
 
         switch (state) {
             case ALL:
                 bookings = bookingRepository.findAllByBookerIdOrderByStartDesc(bookerId, pageRequest);
                 break;
             case CURRENT:
-                bookings = bookingRepository.findCurrentBookingsByBookerId(
-                        bookerId,
-                        LocalDateTime.now(),
-                        LocalDateTime.now(),
-                        pageRequest);
+                bookings = bookingRepository.findCurrentBookingsByBookerId(bookerId, currentDate, currentDate,
+                        nativePageRequest);
                 break;
             case PAST:
-                bookings = bookingRepository.findPastBookingsByBookerId(bookerId, LocalDateTime.now(), pageRequest);
+                bookings = bookingRepository.findPastBookingsByBookerId(bookerId, currentDate, nativePageRequest);
                 break;
             case FUTURE:
-                bookings = bookingRepository.findFutureBookingsByBookerId(bookerId, LocalDateTime.now(), pageRequest);
+                bookings = bookingRepository.findFutureBookingsByBookerId(bookerId, currentDate, nativePageRequest);
                 break;
             case WAITING:
                 bookings = bookingRepository.findAllByBookerIdAndStatusOrderByStartDesc(bookerId,
@@ -136,33 +135,33 @@ public class BookingServiceImpl implements BookingService {
         }
 
         Collection<Booking> bookings;
+        int page = from > 0 ? from / size : 0;
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("start").descending());
+        PageRequest nativePageRequest = PageRequest.of(page, size, Sort.by("start_date").descending());
+        LocalDateTime currentDate = LocalDateTime.now();
 
         switch (state) {
             case ALL:
-                bookings = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(itemOwnerId);
+                bookings = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(itemOwnerId, pageRequest);
                 break;
             case CURRENT:
-                bookings = bookingRepository
-                        .findCurrentBookingsByItemOwnerId(
-                            itemOwnerId,
-                            LocalDateTime.now(),
-                            LocalDateTime.now());
+                bookings = bookingRepository.findCurrentBookingsByItemOwnerId(itemOwnerId, currentDate, currentDate,
+                        nativePageRequest);
                 break;
             case PAST:
-                bookings = bookingRepository.findPastBookingsByItemOwnerId(itemOwnerId,
-                        LocalDateTime.now());
+                bookings = bookingRepository.findPastBookingsByItemOwnerId(itemOwnerId, currentDate, nativePageRequest);
                 break;
             case FUTURE:
-                bookings = bookingRepository.findFutureBookingsByItemOwnerId(itemOwnerId,
-                        LocalDateTime.now());
+                bookings = bookingRepository.findFutureBookingsByItemOwnerId(itemOwnerId, currentDate,
+                        nativePageRequest);
                 break;
             case WAITING:
                 bookings = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(itemOwnerId,
-                        BookingStatus.WAITING);
+                        BookingStatus.WAITING, pageRequest);
                 break;
             case REJECTED:
                 bookings = bookingRepository.findAllByItemOwnerIdAndStatusOrderByStartDesc(itemOwnerId,
-                        BookingStatus.REJECTED);
+                        BookingStatus.REJECTED, pageRequest);
                 break;
             default:
                 bookings = new ArrayList<>();

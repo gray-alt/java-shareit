@@ -1,6 +1,5 @@
 package ru.practicum.shareit.request.dto;
 
-import ru.practicum.shareit.comment.dto.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
@@ -8,6 +7,7 @@ import ru.practicum.shareit.user.model.User;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -25,7 +25,8 @@ public class ItemRequestMapper {
                 .id(itemRequest.getId())
                 .description(itemRequest.getDescription())
                 .created(itemRequest.getCreated())
-                .items(itemRequest.getItems().stream().map(ItemMapper::mapToItemDto).collect(Collectors.toSet()))
+                .items(Optional.ofNullable(itemRequest.getItems()).orElse(new HashSet<>())
+                        .stream().map(ItemMapper::mapToItemDto).collect(Collectors.toSet()))
                 .build();
     }
 

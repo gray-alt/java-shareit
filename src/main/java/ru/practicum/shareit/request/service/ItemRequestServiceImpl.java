@@ -2,7 +2,6 @@ package ru.practicum.shareit.request.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -33,6 +32,9 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public Collection<ItemRequestDto> getOwnItemRequests(Long requestorId) {
+        if (!userRepository.existsById(requestorId)) {
+            throw new NotFoundException("Не найден пользователь с id " + requestorId);
+        }
         Collection<ItemRequest> itemRequests = itemRequestRepository.findAllByRequestorIdOrderByCreatedDesc(
                 requestorId);
         return ItemRequestMapper.mapToItemRequestDto(itemRequests);
@@ -40,14 +42,17 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public Collection<ItemRequestDto> getAllItemRequests(Long userId, int from, int size) {
-        PageRequest pageRequest = PageRequest.of(from, size, Sort.by("created").descending());
+        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("created").descending());
         Iterable<ItemRequest> itemRequests = itemRequestRepository.findAllByRequestorIdNotOrderByCreatedDesc(
                 userId, pageRequest);
         return ItemRequestMapper.mapToItemRequestDto(itemRequests);
     }
 
     @Override
-    public ItemRequestDto getItemRequestById(Long itemRequestId) {
+    public ItemRequestDto getItemRequestById(Long userId, Long itemRequestId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("Не найден пользователь с id " + userId);
+        }
         ItemRequest itemRequest = itemRequestRepository.findById(itemRequestId).orElseThrow(
                 () -> new NotFoundException("Не найден запрос вещи с id " + itemRequestId));
         return ItemRequestMapper.mapToItemRequestDto(itemRequest);

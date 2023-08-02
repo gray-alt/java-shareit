@@ -11,5 +11,5 @@ public interface ItemRequestService {
 
     Collection<ItemRequestDto> getAllItemRequests(Long userId, int from, int size);
 
-    ItemRequestDto getItemRequestById(Long itemRequestId);
+    ItemRequestDto getItemRequestById(Long userId, Long itemRequestId);
 }

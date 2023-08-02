@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.storage.BookingRepository;
@@ -25,6 +27,7 @@ import ru.practicum.shareit.user.storage.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -41,7 +44,9 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto addItem(Long ownerId, ItemDto itemDto) {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
-        ItemRequest itemRequest = itemRequestRepository.findById(itemDto.getRequestId()).orElse(null);
+
+        ItemRequest itemRequest = itemRequestRepository.findById(
+                Optional.ofNullable(itemDto.getRequestId()).orElse(0L)).orElse(null);
 
         Item item = itemRepository.save(ItemMapper.mapToItem(itemDto, owner, itemRequest));
         return ItemMapper.mapToItemDto(item);
@@ -136,7 +141,8 @@ public class ItemServiceImpl implements ItemService {
         if (textForSearch.isEmpty()) {
             return new ArrayList<>();
         }
-        Collection<Item> items = itemRepository.findAllBySearch(textForSearch);
+        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").ascending());
+        Collection<Item> items = itemRepository.findAllBySearch(textForSearch, pageRequest);
         return ItemMapper.mapToItemDto(items);
     }
 
@@ -177,8 +183,10 @@ public class ItemServiceImpl implements ItemService {
         if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException("Не найден пользователь с id " + ownerId);
         }
+        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").ascending());
+
         Collection<ItemWithBooking> items = itemWithBookingRepository.findItemWithBookingByOwnerId(ownerId,
-                LocalDateTime.now());
+                LocalDateTime.now(), pageRequest);
 
         Collection<Comment> allComments = commentRepository.findAllByItemIdIn(
                 items.stream().map(ItemWithBooking::getId).collect(Collectors.toList()));
