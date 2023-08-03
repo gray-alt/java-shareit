@@ -36,16 +36,15 @@ public class ItemController {
     @GetMapping("/{itemId}")
     public ItemWithBookingDto getItemById(@RequestHeader(name = "X-Sharer-User-Id") Long userId,
                                           @PathVariable Long itemId) {
-        //return itemService.getItemById(itemId, userId);
-        return itemService.getItemByIdAlternativeQuery(itemId, userId);
+        return itemService.getItemById(itemId, userId);
     }
 
     @GetMapping
-    public Collection<ItemWithBookingDto> getAllItemsBuOwnerId(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId,
+    public Collection<ItemWithBookingDto> getAllItemsByOwnerId(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId,
                                                                @RequestParam(defaultValue = "0")
                                                                @PositiveOrZero int from,
                                                                @RequestParam(defaultValue = "10") @Positive int size) {
-        return itemService.getAllItemsByOwnerIdAlternativeQuery(ownerId, from, size);
+        return itemService.getAllItemsByOwnerId(ownerId, from, size);
     }
 
     @GetMapping("/search")

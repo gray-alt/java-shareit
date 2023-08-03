@@ -79,7 +79,7 @@ public class ItemServiceImpl implements ItemService {
     public void deleteItem(Long ownerId, Long itemId) {
         if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException("Не найден пользователь с id " + ownerId);
-        } else if (itemRepository.existsByIdAndOwnerId(itemId, ownerId)) {
+        } else if (!itemRepository.existsByIdAndOwnerId(itemId, ownerId)) {
             throw new NotFoundException("Не найдена вещь с id " + itemId +
                     " у владельца с id " + ownerId);
         }
@@ -95,91 +95,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemWithBookingDto> getAllItemsByOwnerId(Long ownerId) {
-        if (!userRepository.existsById(ownerId)) {
-            throw new NotFoundException("Не найден пользователь с id " + ownerId);
-        }
-        Collection<Item> items = itemRepository.findAllByOwnerIdOrderById(ownerId);
-        Collection<ItemWithBookingDto> itemWithBookingDtos = new ArrayList<>();
-
-        LocalDateTime nowDateTime = LocalDateTime.now();
-
-        for (Item item : items) {
-            itemWithBookingDtos.add(
-                    ItemMapper.mapToItemWithBookingDto(
-                            item,
-                            bookingRepository.findLastBookingForItem(item.getId(), ownerId, nowDateTime),
-                            bookingRepository.findNextBookingForItem(item.getId(), ownerId, nowDateTime),
-                            commentRepository.findAllByItemId(item.getId())
-                    )
-            );
-        }
-        return itemWithBookingDtos;
-    }
-
-    @Override
-    public ItemWithBookingDto getItemById(Long itemId, Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Не найден пользователь с id " + userId);
-        }
-
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
-
-        LocalDateTime nowDateTime = LocalDateTime.now();
-
-        return ItemMapper.mapToItemWithBookingDto(
-                item,
-                bookingRepository.findLastBookingForItem(itemId, userId, nowDateTime),
-                bookingRepository.findNextBookingForItem(itemId, userId, nowDateTime),
-                commentRepository.findAllByItemId(itemId)
-        );
-    }
-
-    @Override
-    public Collection<ItemDto> getItemsBySearch(String textForSearch, int from, int size) {
-        if (textForSearch.isEmpty()) {
-            return new ArrayList<>();
-        }
-        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").ascending());
-        Collection<Item> items = itemRepository.findAllBySearch(textForSearch, pageRequest);
-        return ItemMapper.mapToItemDto(items);
-    }
-
-    @Override
-    public CommentDto addComment(Long authorId, Long itemId, CommentDto commentDto) {
-        if (!bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndLessThan(itemId, authorId,
-                BookingStatus.APPROVED, LocalDateTime.now())) {
-            throw new NotAllowedException("Не найдена ни одна завершенная аренда");
-        }
-        User author = userRepository.findById(authorId)
-                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + authorId));
-
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
-
-        Comment comment = commentRepository.save(CommentMapper.mapToComment(commentDto, author, item,
-                LocalDateTime.now()));
-
-        return CommentMapper.mapToCommentDto(comment);
-    }
-
-    @Override
-    public ItemWithBookingDto getItemByIdAlternativeQuery(Long itemId, Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Не найден пользователь с id " + userId);
-        }
-
-        LocalDateTime nowDateTime = LocalDateTime.now();
-
-        ItemWithBooking item = itemWithBookingRepository.findItemWithBookingById(itemId, userId, nowDateTime)
-                .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
-
-        return ItemMapper.mapToItemWithBookingAlternativeQueryDto(item, commentRepository.findAllByItemId(itemId));
-    }
-
-    @Override
-    public Collection<ItemWithBookingDto> getAllItemsByOwnerIdAlternativeQuery(Long ownerId, int from, int size) {
+    public Collection<ItemWithBookingDto> getAllItemsByOwnerId(Long ownerId, int from, int size) {
         if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException("Не найден пользователь с id " + ownerId);
         }
@@ -202,5 +118,48 @@ public class ItemServiceImpl implements ItemService {
         }
 
         return itemWithBookingDtos;
+    }
+
+    @Override
+    public ItemWithBookingDto getItemById(Long itemId, Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("Не найден пользователь с id " + userId);
+        }
+
+        LocalDateTime nowDateTime = LocalDateTime.now();
+
+        ItemWithBooking item = itemWithBookingRepository.findItemWithBookingById(itemId, userId, nowDateTime)
+                .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
+
+        return ItemMapper.mapToItemWithBookingAlternativeQueryDto(item, commentRepository.findAllByItemId(itemId));
+    }
+
+    @Override
+    public Collection<ItemDto> getItemsBySearch(String textForSearch, int from, int size) {
+        if (textForSearch.isEmpty()) {
+            return new ArrayList<>();
+        }
+        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").ascending());
+        Collection<Item> items = itemRepository.findAllBySearch(textForSearch, pageRequest);
+        return ItemMapper.mapToItemDto(items);
+    }
+
+    @Override
+    public CommentDto addComment(Long authorId, Long itemId, CommentDto commentDto) {
+        User author = userRepository.findById(authorId)
+                .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + authorId));
+
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
+
+        if (!bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndLessThan(itemId, authorId,
+                BookingStatus.APPROVED, LocalDateTime.now())) {
+            throw new NotAllowedException("Не найдена ни одна завершенная аренда");
+        }
+
+        Comment comment = commentRepository.save(CommentMapper.mapToComment(commentDto, author, item,
+                LocalDateTime.now()));
+
+        return CommentMapper.mapToCommentDto(comment);
     }
 }

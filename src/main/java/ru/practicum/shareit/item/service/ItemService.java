@@ -15,15 +15,11 @@ public interface ItemService {
 
     void deleteAllOwnerItems(Long ownerId);
 
-    Collection<ItemWithBookingDto> getAllItemsByOwnerId(Long ownerId);
+    Collection<ItemWithBookingDto> getAllItemsByOwnerId(Long ownerId, int from, int size);
 
     ItemWithBookingDto getItemById(Long itemId, Long userId);
 
     Collection<ItemDto> getItemsBySearch(String textForSearch, int from, int size);
 
     CommentDto addComment(Long authorId, Long itemId, CommentDto commentDto);
-
-    ItemWithBookingDto getItemByIdAlternativeQuery(Long itemId, Long userId);
-
-    Collection<ItemWithBookingDto> getAllItemsByOwnerIdAlternativeQuery(Long ownerId, int from, int size);
 }

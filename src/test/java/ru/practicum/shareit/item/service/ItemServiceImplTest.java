@@ -1,127 +1,374 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.dto.SimpleBookingDto;
-import ru.practicum.shareit.booking.service.BookingService;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import ru.practicum.shareit.booking.storage.BookingRepository;
+import ru.practicum.shareit.comment.dto.CommentDto;
+import ru.practicum.shareit.exception.NotAllowedException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemWithBookingDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
+@Transactional
+@AutoConfigureTestDatabase
 public class ItemServiceImplTest {
     private final ItemService itemService;
     private final UserService userService;
-    private final BookingService bookingService;
+    @MockBean
+    private final BookingRepository bookingRepository;
+
+    private final UserDto userDto = makeUserDto("test", "test");
+    private final CommentDto commentDto = makeCommentDto("author", "comment", LocalDateTime.now());
 
     @Test
-    public void testGetItemById() {
-        UserDto userDto = UserDto.builder()
-                .name("User 1")
-                .email("user@user.ur")
+    void addItemWithWrongOwner() {
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.addItem(999L, itemDto));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найден пользователь с id"));
+    }
+
+    @Test
+    void addItem() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        ItemDto newItemDto = itemService.addItem(newUserDto.getId(), itemDto);
+
+        assertThat(newItemDto, allOf(
+                hasProperty("id", notNullValue()),
+                hasProperty("name", equalTo(itemDto.getName())),
+                hasProperty("description", equalTo(itemDto.getDescription())),
+                hasProperty("available", equalTo(itemDto.getAvailable()))
+        ));
+    }
+
+    @Test
+    void updateItemWithWrongOwner() {
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.updateItem(999L, 1L, itemDto));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найден пользователь с id"));
+    }
+
+    @Test
+    void updateItemWithWrongId() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.updateItem(newUserDto.getId(), 999L, itemDto));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найдена вещь с id"));
+    }
+
+    @Test
+    void updateItemOnlyName() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        ItemDto newItemDto = itemService.addItem(newUserDto.getId(), itemDto);
+
+        ItemDto itemDtoForUpdate = makeItemDto("test2", null, null, null);
+        ItemDto updatedItemDto = itemService.updateItem(newUserDto.getId(), newItemDto.getId(), itemDtoForUpdate);
+
+        assertThat(updatedItemDto, allOf(
+                hasProperty("id", equalTo(newItemDto.getId())),
+                hasProperty("name", equalTo("test2")),
+                hasProperty("description", equalTo("test")),
+                hasProperty("available", equalTo(true))
+        ));
+    }
+
+    @Test
+    void updateItemOnlyDescription() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        ItemDto newItemDto = itemService.addItem(newUserDto.getId(), itemDto);
+
+        ItemDto itemDtoForUpdate = makeItemDto(null, "test2", null, null);
+        ItemDto updatedItemDto = itemService.updateItem(newUserDto.getId(), newItemDto.getId(), itemDtoForUpdate);
+
+        assertThat(updatedItemDto, allOf(
+                hasProperty("id", equalTo(newItemDto.getId())),
+                hasProperty("name", equalTo("test")),
+                hasProperty("description", equalTo("test2")),
+                hasProperty("available", equalTo(true))
+        ));
+    }
+
+    @Test
+    void updateItemOnlyAvailable() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        ItemDto newItemDto = itemService.addItem(newUserDto.getId(), itemDto);
+
+        ItemDto itemDtoForUpdate = makeItemDto(null, null, false, null);
+        ItemDto updatedItemDto = itemService.updateItem(newUserDto.getId(), newItemDto.getId(), itemDtoForUpdate);
+
+        assertThat(updatedItemDto, allOf(
+                hasProperty("id", equalTo(newItemDto.getId())),
+                hasProperty("name", equalTo("test")),
+                hasProperty("description", equalTo("test")),
+                hasProperty("available", equalTo(false))
+        ));
+    }
+
+    @Test
+    void deleteItemWithWrongOwner() {
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.deleteItem(999L, 1L));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найден пользователь с id"));
+    }
+
+    @Test
+    void deleteItemWithWrongId() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.deleteItem(newUserDto.getId(), 999L));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найдена вещь с id"));
+    }
+
+    @Test
+    void deleteItem() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        ItemDto newItemDto = itemService.addItem(newUserDto.getId(), itemDto);
+
+        itemService.deleteItem(newUserDto.getId(), newItemDto.getId());
+
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.deleteItem(newUserDto.getId(), newItemDto.getId()));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найдена вещь с id"));
+    }
+
+    @Test
+    void deleteAllOwnerItemsWithWrongOwner() {
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.deleteAllOwnerItems(999L));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найден пользователь с id"));
+    }
+
+    @Test
+    void deleteAllOwnerItems() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto_1 = makeItemDto("test_1", "test_1", true, null);
+        ItemDto newItemDto_1 = itemService.addItem(newUserDto.getId(), itemDto_1);
+        ItemDto itemDto_2 = makeItemDto("test_2", "test_2", true, null);
+        ItemDto newItemDto_2 = itemService.addItem(newUserDto.getId(), itemDto_2);
+
+        Collection<ItemWithBookingDto> itemDtos = itemService.getAllItemsByOwnerId(newUserDto.getId(), 0, 10);
+
+        assertThat(itemDtos.size(), equalTo(2));
+        assertThat(itemDtos, hasItem(allOf(
+                hasProperty("name", equalTo("test_1")),
+                hasProperty("description", equalTo("test_1"))
+        )));
+        assertThat(itemDtos, hasItem(allOf(
+                hasProperty("name", equalTo("test_2")),
+                hasProperty("description", equalTo("test_2"))
+        )));
+
+        itemService.deleteAllOwnerItems(newUserDto.getId());
+        itemDtos = itemService.getAllItemsByOwnerId(newUserDto.getId(), 0, 10);
+        assertThat(itemDtos.size(), equalTo(0));
+    }
+
+    @Test
+    void getAllItemsByOwnerIdWithWrongOwner() {
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.getAllItemsByOwnerId(999L, 0, 10));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найден пользователь с id"));
+    }
+
+    @Test
+    void getAllItemsByOwnerId() {
+        when(bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndLessThan(any(), any(), any(), any()))
+                .thenReturn(true);
+
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto_1 = makeItemDto("test_1", "test_1", true, null);
+        ItemDto newItemDto_1 = itemService.addItem(newUserDto.getId(), itemDto_1);
+        ItemDto itemDto_2 = makeItemDto("test_2", "test_2", true, null);
+        ItemDto newItemDto_2 = itemService.addItem(newUserDto.getId(), itemDto_2);
+
+        CommentDto newCommentDto = itemService.addComment(newUserDto.getId(), newItemDto_1.getId(), commentDto);
+
+        Collection<ItemWithBookingDto> itemDtos = itemService.getAllItemsByOwnerId(newUserDto.getId(), 0, 10);
+
+        assertThat(itemDtos.size(), equalTo(2));
+        assertThat(itemDtos, hasItem(allOf(
+                hasProperty("name", equalTo("test_1")),
+                hasProperty("description", equalTo("test_1"))
+        )));
+        assertThat(itemDtos, hasItem(allOf(
+                hasProperty("name", equalTo("test_2")),
+                hasProperty("description", equalTo("test_2"))
+        )));
+    }
+
+    @Test
+    void getItemsByIdWithWrongUserId() {
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.getItemById(1L, 999L));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найден пользователь с id"));
+    }
+
+    @Test
+    void getItemsByIdWithWrongItemId() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.getItemById(999L, newUserDto.getId()));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найдена вещь с id"));
+    }
+
+    @Test
+    void getItemsById() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        ItemDto newItemDto = itemService.addItem(newUserDto.getId(), itemDto);
+
+        ItemWithBookingDto foundItem = itemService.getItemById(newItemDto.getId(), newUserDto.getId());
+
+        assertThat(foundItem, allOf(
+                hasProperty("id", equalTo(newItemDto.getId())),
+                hasProperty("name", equalTo("test")),
+                hasProperty("description", equalTo("test"))
+        ));
+    }
+
+    @Test
+    void getItemsBySearchWithEmptyTextSearch() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        ItemDto newItemDto = itemService.addItem(newUserDto.getId(), itemDto);
+
+        Collection<ItemDto> itemDtos = itemService.getItemsBySearch("", 0, 10);
+        assertThat(itemDtos.size(), equalTo(0));
+    }
+
+    @Test
+    void getItemsBySearchWithAnotherTextSearch() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        ItemDto newItemDto = itemService.addItem(newUserDto.getId(), itemDto);
+
+        Collection<ItemDto> itemDtos = itemService.getItemsBySearch("another text", 0, 10);
+        assertThat(itemDtos.size(), equalTo(0));
+    }
+
+    @Test
+    void getItemsBySearch() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto_1 = makeItemDto("test_1", "test_1", true, null);
+        ItemDto newItemDto_1 = itemService.addItem(newUserDto.getId(), itemDto_1);
+        ItemDto itemDto_2 = makeItemDto("test_2", "test_2", true, null);
+        ItemDto newItemDto_2 = itemService.addItem(newUserDto.getId(), itemDto_2);
+
+        Collection<ItemDto> itemDtos = itemService.getItemsBySearch("est_", 0, 10);
+        assertThat(itemDtos.size(), equalTo(2));
+    }
+
+    @Test
+    void addCommentWithWrongAuthor() {
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.addComment(999L, 1L, commentDto));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найден пользователь с id"));
+    }
+
+    @Test
+    void addCommentWithWrongItem() {
+        UserDto newUserDto = userService.addUser(userDto);
+
+        NotFoundException e = Assertions.assertThrows(NotFoundException.class,
+                () -> itemService.addComment(newUserDto.getId(), 999L, commentDto));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найдена вещь с id"));
+    }
+
+    @Test
+    void addCommentWithNotApprovedBookings() {
+        when(bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndLessThan(any(), any(), any(), any()))
+                .thenReturn(false);
+
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        ItemDto newItemDto = itemService.addItem(newUserDto.getId(), itemDto);
+
+        NotAllowedException e = Assertions.assertThrows(NotAllowedException.class,
+                () -> itemService.addComment(newUserDto.getId(), newItemDto.getId(), commentDto));
+        assertThat(e.getMessage(), startsWithIgnoringCase("Не найдена ни одна завершенная аренда"));
+    }
+
+    @Test
+    void addComment() {
+        when(bookingRepository.existsByItemIdAndBookerIdAndStatusAndEndLessThan(any(), any(), any(), any()))
+                .thenReturn(true);
+
+        UserDto newUserDto = userService.addUser(userDto);
+
+        ItemDto itemDto = makeItemDto("test", "test", true, null);
+        ItemDto newItemDto = itemService.addItem(newUserDto.getId(), itemDto);
+
+        CommentDto newCommentDto = itemService.addComment(newUserDto.getId(), newItemDto.getId(), commentDto);
+
+        assertThat(newCommentDto, allOf(
+                hasProperty("id", notNullValue()),
+                hasProperty("authorName", equalTo(userDto.getName())),
+                hasProperty("text", equalTo(commentDto.getText())),
+                hasProperty("created", greaterThanOrEqualTo(commentDto.getCreated()))
+        ));
+    }
+
+    private ItemDto makeItemDto(String name, String description, Boolean isAvailable, Long requestId) {
+        return ItemDto.builder()
+                .name(name)
+                .description(description)
+                .available(isAvailable)
+                .requestId(requestId)
                 .build();
+    }
 
-        UserDto owner = userService.addUser(userDto);
-
-        UserDto bookerDto1 = UserDto.builder()
-                .name("Booker 1")
-                .email("booker_1@user.ur")
+    private UserDto makeUserDto(String name, String email) {
+        return UserDto.builder()
+                .name(name)
+                .email(email)
                 .build();
+    }
 
-        UserDto booker1 = userService.addUser(bookerDto1);
-
-        UserDto bookerDto2 = UserDto.builder()
-                .name("Booker 2")
-                .email("booker_2@user.ur")
+    private CommentDto makeCommentDto(String authorName, String text, LocalDateTime created) {
+        return CommentDto.builder()
+                .authorName(authorName)
+                .text(text)
+                .created(created)
                 .build();
-
-        UserDto booker2 = userService.addUser(bookerDto2);
-
-        ItemDto itemDto = ItemDto.builder()
-                .description("Item 1")
-                .name("Item 1")
-                .available(true)
-                .build();
-
-        ItemDto item = itemService.addItem(owner.getId(), itemDto);
-
-        BookingDto bookingDto1 = BookingDto.builder()
-                .itemId(item.getId())
-                .start(LocalDateTime.now().minusMinutes(5))
-                .end(LocalDateTime.now().minusMinutes(2))
-                .build();
-
-        BookingDto booking1 = bookingService.addBooking(booker1.getId(), bookingDto1);
-        bookingService.approveBooking(owner.getId(), booking1.getId(), true);
-
-        BookingDto bookingDto2 = BookingDto.builder()
-                .itemId(item.getId())
-                .start(LocalDateTime.now().plusMinutes(2))
-                .end(LocalDateTime.now().plusMinutes(5))
-                .build();
-
-        BookingDto booking2 = bookingService.addBooking(booker2.getId(), bookingDto2);
-        bookingService.approveBooking(owner.getId(), booking2.getId(), true);
-
-        // item owner
-        ItemWithBookingDto itemWithBookingDto = itemService.getItemById(item.getId(), owner.getId());
-
-        SimpleBookingDto simpleBookingDto1 = itemWithBookingDto.getLastBooking();
-        SimpleBookingDto simpleBookingDto2 = itemWithBookingDto.getNextBooking();
-
-        assertThat(simpleBookingDto1)
-                .hasFieldOrPropertyWithValue("id", booking1.getId());
-
-        assertThat(simpleBookingDto2)
-                .hasFieldOrPropertyWithValue("id", booking2.getId());
-
-        // booker 1 (past)
-        itemWithBookingDto = itemService.getItemById(item.getId(), booker1.getId());
-
-        simpleBookingDto1 = itemWithBookingDto.getLastBooking();
-        simpleBookingDto2 = itemWithBookingDto.getNextBooking();
-
-        assertThat(simpleBookingDto1)
-                .isNull();
-
-        assertThat(simpleBookingDto2)
-                .isNull();
-
-        // booker 2 (future)
-        itemWithBookingDto = itemService.getItemById(item.getId(), booker2.getId());
-
-        simpleBookingDto1 = itemWithBookingDto.getLastBooking();
-        simpleBookingDto2 = itemWithBookingDto.getNextBooking();
-
-        assertThat(simpleBookingDto1)
-                .isNull();
-
-        assertThat(simpleBookingDto2)
-                .isNull();
-
-        // new search item
-        ItemWithBookingDto newItem = itemService.getItemByIdAlternativeQuery(item.getId(), booker1.getId());
-
-        assertThat(newItem).hasFieldOrPropertyWithValue("lastBooking", null);
-        assertThat(newItem).hasFieldOrPropertyWithValue("nextBooking", null);
-
-        newItem = itemService.getItemByIdAlternativeQuery(item.getId(), owner.getId());
-
-        assertThat(newItem.getLastBooking()).hasFieldOrPropertyWithValue("id", booking1.getId());
-        assertThat(newItem.getNextBooking()).hasFieldOrPropertyWithValue("id", booking2.getId());
-
-        // new search all items
-        Collection<ItemWithBookingDto> newItems = itemService.getAllItemsByOwnerIdAlternativeQuery(owner.getId(), 0, 10);
-        assertThat(newItems).size().isEqualTo(1);
     }
 }
