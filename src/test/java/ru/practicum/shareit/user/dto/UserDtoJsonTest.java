@@ -16,7 +16,7 @@ public class UserDtoJsonTest {
     JacksonTester<UserDto> json;
 
     @Test
-    void UserDtoTest() throws IOException {
+    void userDtoTest() throws IOException {
         UserDto userDto = new UserDto(
                 1L,
                 "John",
