@@ -174,21 +174,21 @@ public class ItemServiceImplTest {
     void deleteAllOwnerItems() {
         UserDto newUserDto = userService.addUser(userDto);
 
-        ItemDto itemDto_1 = makeItemDto("test_1", "test_1", true, null);
-        ItemDto newItemDto_1 = itemService.addItem(newUserDto.getId(), itemDto_1);
-        ItemDto itemDto_2 = makeItemDto("test_2", "test_2", true, null);
-        ItemDto newItemDto_2 = itemService.addItem(newUserDto.getId(), itemDto_2);
+        ItemDto itemDto1 = makeItemDto("test1", "test1", true, null);
+        ItemDto newItemDto1 = itemService.addItem(newUserDto.getId(), itemDto1);
+        ItemDto itemDto2 = makeItemDto("test2", "test2", true, null);
+        ItemDto newItemDto2 = itemService.addItem(newUserDto.getId(), itemDto2);
 
         Collection<ItemWithBookingDto> itemDtos = itemService.getAllItemsByOwnerId(newUserDto.getId(), 0, 10);
 
         assertThat(itemDtos.size(), equalTo(2));
         assertThat(itemDtos, hasItem(allOf(
-                hasProperty("name", equalTo("test_1")),
-                hasProperty("description", equalTo("test_1"))
+                hasProperty("name", equalTo("test1")),
+                hasProperty("description", equalTo("test1"))
         )));
         assertThat(itemDtos, hasItem(allOf(
-                hasProperty("name", equalTo("test_2")),
-                hasProperty("description", equalTo("test_2"))
+                hasProperty("name", equalTo("test2")),
+                hasProperty("description", equalTo("test2"))
         )));
 
         itemService.deleteAllOwnerItems(newUserDto.getId());
@@ -210,23 +210,23 @@ public class ItemServiceImplTest {
 
         UserDto newUserDto = userService.addUser(userDto);
 
-        ItemDto itemDto_1 = makeItemDto("test_1", "test_1", true, null);
-        ItemDto newItemDto_1 = itemService.addItem(newUserDto.getId(), itemDto_1);
-        ItemDto itemDto_2 = makeItemDto("test_2", "test_2", true, null);
-        ItemDto newItemDto_2 = itemService.addItem(newUserDto.getId(), itemDto_2);
+        ItemDto itemDto1 = makeItemDto("test1", "test1", true, null);
+        ItemDto newItemDto1 = itemService.addItem(newUserDto.getId(), itemDto1);
+        ItemDto itemDto2 = makeItemDto("test2", "test2", true, null);
+        ItemDto newItemDto2 = itemService.addItem(newUserDto.getId(), itemDto2);
 
-        CommentDto newCommentDto = itemService.addComment(newUserDto.getId(), newItemDto_1.getId(), commentDto);
+        CommentDto newCommentDto = itemService.addComment(newUserDto.getId(), newItemDto1.getId(), commentDto);
 
         Collection<ItemWithBookingDto> itemDtos = itemService.getAllItemsByOwnerId(newUserDto.getId(), 0, 10);
 
         assertThat(itemDtos.size(), equalTo(2));
         assertThat(itemDtos, hasItem(allOf(
-                hasProperty("name", equalTo("test_1")),
-                hasProperty("description", equalTo("test_1"))
+                hasProperty("name", equalTo("test1")),
+                hasProperty("description", equalTo("test1"))
         )));
         assertThat(itemDtos, hasItem(allOf(
-                hasProperty("name", equalTo("test_2")),
-                hasProperty("description", equalTo("test_2"))
+                hasProperty("name", equalTo("test2")),
+                hasProperty("description", equalTo("test2"))
         )));
     }
 
@@ -288,12 +288,12 @@ public class ItemServiceImplTest {
     void getItemsBySearch() {
         UserDto newUserDto = userService.addUser(userDto);
 
-        ItemDto itemDto_1 = makeItemDto("test_1", "test_1", true, null);
-        ItemDto newItemDto_1 = itemService.addItem(newUserDto.getId(), itemDto_1);
-        ItemDto itemDto_2 = makeItemDto("test_2", "test_2", true, null);
-        ItemDto newItemDto_2 = itemService.addItem(newUserDto.getId(), itemDto_2);
+        ItemDto itemDto1 = makeItemDto("test1", "test1", true, null);
+        ItemDto newItemDto1 = itemService.addItem(newUserDto.getId(), itemDto1);
+        ItemDto itemDto2 = makeItemDto("test2", "test2", true, null);
+        ItemDto newItemDto2 = itemService.addItem(newUserDto.getId(), itemDto2);
 
-        Collection<ItemDto> itemDtos = itemService.getItemsBySearch("est_", 0, 10);
+        Collection<ItemDto> itemDtos = itemService.getItemsBySearch("est", 0, 10);
         assertThat(itemDtos.size(), equalTo(2));
     }
 

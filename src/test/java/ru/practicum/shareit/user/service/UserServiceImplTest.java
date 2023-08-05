@@ -34,46 +34,46 @@ public class UserServiceImplTest {
 
     @Test
     void updateUserWithDoubleEmail() {
-        UserDto userDto_1 = makeUserDto("test_1", "test_1@test.ru");
-        UserDto newUserDto_1 = userService.addUser(userDto_1);
+        UserDto userDto1 = makeUserDto("test1", "test1@test.ru");
+        UserDto newUserDto1 = userService.addUser(userDto1);
 
-        UserDto userDto_2 = makeUserDto("test_2", "test_2@test.ru");
-        UserDto newUserDto_2 = userService.addUser(userDto_2);
+        UserDto userDto2 = makeUserDto("test2", "test2@test.ru");
+        UserDto newUserDto2 = userService.addUser(userDto2);
 
-        UserDto userDtoForUpdate = makeUserDto("test_1", "test_2@test.ru");
+        UserDto userDtoForUpdate = makeUserDto("test2", "test2@test.ru");
         Assertions.assertThrows(AlreadyExistException.class,
-                () -> userService.updateUser(newUserDto_1.getId(), userDtoForUpdate));
+                () -> userService.updateUser(newUserDto1.getId(), userDtoForUpdate));
     }
 
     @Test
     void updateUserWithWrongId() {
-        UserDto userDtoForUpdate = makeUserDto("test_2", "test_2@test.ru");
+        UserDto userDtoForUpdate = makeUserDto("test2", "test2@test.ru");
         Assertions.assertThrows(NotFoundException.class,
                 () -> userService.updateUser(999L, userDtoForUpdate));
     }
 
     @Test
     void updateUserOnlyName() {
-        UserDto userDto_1 = makeUserDto("test_1", "test_1@test.ru");
-        UserDto newUserDto_1 = userService.addUser(userDto_1);
+        UserDto userDto1 = makeUserDto("test1", "test1@test.ru");
+        UserDto newUserDto1 = userService.addUser(userDto1);
 
-        UserDto userDtoForUpdate = makeUserDto("test_2", null);
-        UserDto updatedUserDto = userService.updateUser(newUserDto_1.getId(), userDtoForUpdate);
+        UserDto userDtoForUpdate = makeUserDto("test2", null);
+        UserDto updatedUserDto = userService.updateUser(newUserDto1.getId(), userDtoForUpdate);
 
-        assertThat(newUserDto_1.getName(), equalTo("test_1"));
-        assertThat(updatedUserDto.getName(), equalTo("test_2"));
+        assertThat(newUserDto1.getName(), equalTo("test1"));
+        assertThat(updatedUserDto.getName(), equalTo("test2"));
     }
 
     @Test
     void updateUserOnlyEmail() {
-        UserDto userDto_1 = makeUserDto("test_1", "test_1@test.ru");
-        UserDto newUserDto_1 = userService.addUser(userDto_1);
+        UserDto userDto1 = makeUserDto("test1", "test1@test.ru");
+        UserDto newUserDto1 = userService.addUser(userDto1);
 
-        UserDto userDtoForUpdate = makeUserDto(null, "test_2@test.ru");
-        UserDto updatedUserDto = userService.updateUser(newUserDto_1.getId(), userDtoForUpdate);
+        UserDto userDtoForUpdate = makeUserDto(null, "test2@test.ru");
+        UserDto updatedUserDto = userService.updateUser(newUserDto1.getId(), userDtoForUpdate);
 
-        assertThat(newUserDto_1.getEmail(), equalTo("test_1@test.ru"));
-        assertThat(updatedUserDto.getEmail(), equalTo("test_2@test.ru"));
+        assertThat(newUserDto1.getEmail(), equalTo("test1@test.ru"));
+        assertThat(updatedUserDto.getEmail(), equalTo("test2@test.ru"));
     }
 
     @Test
@@ -101,25 +101,25 @@ public class UserServiceImplTest {
 
     @Test
     void getAllUsers() {
-        UserDto userDto_1 = makeUserDto("test_1", "test_1@test.ru");
-        UserDto newUserDto_1 = userService.addUser(userDto_1);
+        UserDto userDto1 = makeUserDto("test1", "test1@test.ru");
+        UserDto newUserDto1 = userService.addUser(userDto1);
 
-        UserDto userDto_2 = makeUserDto("test_2", "test_2@test.ru");
-        UserDto newUserDto_2 = userService.addUser(userDto_2);
+        UserDto userDto2 = makeUserDto("test2", "test2@test.ru");
+        UserDto newUserDto2 = userService.addUser(userDto2);
 
         Collection<UserDto> userDtos = userService.getAllUsers();
         assertThat(userDtos.size(), equalTo(2));
 
-        assertThat(userDtos, hasItem( allOf(
-                hasProperty("id", equalTo(newUserDto_1.getId())),
-                hasProperty("name", equalTo(newUserDto_1.getName())),
-                hasProperty("email", equalTo(newUserDto_1.getEmail()))
+        assertThat(userDtos, hasItem(allOf(
+                hasProperty("id", equalTo(newUserDto1.getId())),
+                hasProperty("name", equalTo(newUserDto1.getName())),
+                hasProperty("email", equalTo(newUserDto1.getEmail()))
         )));
 
-        assertThat(userDtos, hasItem( allOf(
-                hasProperty("id", equalTo(newUserDto_2.getId())),
-                hasProperty("name", equalTo(newUserDto_2.getName())),
-                hasProperty("email", equalTo(newUserDto_2.getEmail()))
+        assertThat(userDtos, hasItem(allOf(
+                hasProperty("id", equalTo(newUserDto2.getId())),
+                hasProperty("name", equalTo(newUserDto2.getName())),
+                hasProperty("email", equalTo(newUserDto2.getEmail()))
         )));
     }
 
@@ -131,14 +131,14 @@ public class UserServiceImplTest {
 
     @Test
     void getUserById() {
-        UserDto userDto_1 = makeUserDto("test_1", "test_1@test.ru");
-        UserDto newUserDto_1 = userService.addUser(userDto_1);
+        UserDto userDto1 = makeUserDto("test1", "test1@test.ru");
+        UserDto newUserDto1 = userService.addUser(userDto1);
 
-        UserDto foundUserDto = userService.getUserById(newUserDto_1.getId());
+        UserDto foundUserDto = userService.getUserById(newUserDto1.getId());
         assertThat(foundUserDto, allOf(
-                hasProperty("id", equalTo(newUserDto_1.getId())),
-                hasProperty("name", equalTo(newUserDto_1.getName())),
-                hasProperty("email", equalTo(newUserDto_1.getEmail()))
+                hasProperty("id", equalTo(newUserDto1.getId())),
+                hasProperty("name", equalTo(newUserDto1.getName())),
+                hasProperty("email", equalTo(newUserDto1.getEmail()))
         ));
     }
 

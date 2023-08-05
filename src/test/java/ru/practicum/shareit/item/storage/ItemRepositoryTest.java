@@ -48,35 +48,35 @@ public class ItemRepositoryTest {
 
     @Test
     void findAllBySearch() {
-        Item item_1 = new Item();
-        item_1.setName("test_1");
-        item_1.setDescription("test 1 description");
-        item_1.setAvailable(true);
+        Item item1 = new Item();
+        item1.setName("test1");
+        item1.setDescription("test 1 description");
+        item1.setAvailable(true);
 
-        Item item_2 = new Item();
-        item_2.setName("test_2");
-        item_2.setDescription("test 2 description");
-        item_2.setAvailable(true);
+        Item item2 = new Item();
+        item2.setName("test2");
+        item2.setDescription("test 2 description");
+        item2.setAvailable(true);
 
-        itemRepository.save(item_1);
-        itemRepository.save(item_2);
+        itemRepository.save(item1);
+        itemRepository.save(item2);
 
         List<Item> items = itemRepository.findAllBySearch("another search",
                 PageRequest.of(0, 10, Sort.by("id").ascending()));
 
         assertThat(items.size(), equalTo(0));
 
-        items = itemRepository.findAllBySearch("est_",
+        items = itemRepository.findAllBySearch("est",
                 PageRequest.of(0, 10, Sort.by("id").ascending()));
 
         assertThat(items.size(), equalTo(2));
         assertThat(items, hasItem(allOf(
-                hasProperty("name", equalTo(item_1.getName())),
-                hasProperty("description", equalTo(item_1.getDescription()))
+                hasProperty("name", equalTo(item1.getName())),
+                hasProperty("description", equalTo(item1.getDescription()))
         )));
         assertThat(items, hasItem(allOf(
-                hasProperty("name", equalTo(item_2.getName())),
-                hasProperty("description", equalTo(item_2.getDescription()))
+                hasProperty("name", equalTo(item2.getName())),
+                hasProperty("description", equalTo(item2.getDescription()))
         )));
     }
 }
