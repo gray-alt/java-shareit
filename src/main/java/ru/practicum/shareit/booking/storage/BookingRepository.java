@@ -139,46 +139,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     // Бронирования по статусу и владельцу вещей
     List<Booking> findAllByItemOwnerIdAndStatusOrderByStartDesc(Long ownerId, BookingStatus status, Pageable pageable);
 
-    // Последнее бронирование вещи
-    @Query (value = "select " +
-            "   bk.id, " +
-            "   bk.start_date, " +
-            "   bk.end_date, " +
-            "   bk.booker_id, " +
-            "   bk.item_id, " +
-            "   bk.status " +
-            "from bookings bk " +
-            "left join items it " +
-            "   on bk.item_id = it.id " +
-            "where " +
-            "   bk.item_id = ?1 " +
-            "   and it.owner_id = ?2 " +
-            "   and bk.status = 'APPROVED' " +
-            "   and bk.start_date < ?3 " +
-            "order by bk.end_date desc " +
-            "limit 1", nativeQuery = true)
-    Booking findLastBookingForItem(Long itemId, Long ownerId, LocalDateTime dateTime);
-
-    // Первое будущее бронирование вещи
-    @Query (value = "select " +
-            "   bk.id, " +
-            "   bk.start_date, " +
-            "   bk.end_date, " +
-            "   bk.booker_id, " +
-            "   bk.item_id, " +
-            "   bk.status " +
-            "from bookings bk " +
-            "left join items it " +
-            "   on bk.item_id = it.id " +
-            "where " +
-            "   bk.item_id = ?1 " +
-            "   and it.owner_id = ?2 " +
-            "   and bk.status = 'APPROVED' " +
-            "   and bk.start_date > ?3 " +
-            "order by bk.start_date Asc " +
-            "limit 1", nativeQuery = true)
-    Booking findNextBookingForItem(Long itemId, Long ownerId, LocalDateTime dateTime);
-
     // Существует завершенное бронирование вещи
     boolean existsByItemIdAndBookerIdAndStatusAndEndLessThan(Long itemId, Long bookerId, BookingStatus status,
                                                              LocalDateTime endDate);
