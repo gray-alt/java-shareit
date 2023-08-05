@@ -110,7 +110,7 @@ public class ItemServiceImpl implements ItemService {
         Collection<ItemWithBookingDto> itemWithBookingDtos = new ArrayList<>();
 
         for (ItemWithBooking item : items) {
-            itemWithBookingDtos.add(ItemMapper.mapToItemWithBookingAlternativeQueryDto(item,
+            itemWithBookingDtos.add(ItemMapper.mapToItemWithBookingDto(item,
                     allComments
                             .stream()
                             .filter(comment -> comment.getItemOfCommentId().equals(item.getId()))
@@ -131,7 +131,7 @@ public class ItemServiceImpl implements ItemService {
         ItemWithBooking item = itemWithBookingRepository.findItemWithBookingById(itemId, userId, nowDateTime)
                 .orElseThrow(() -> new NotFoundException("Не найдена вещь с id " + itemId));
 
-        return ItemMapper.mapToItemWithBookingAlternativeQueryDto(item, commentRepository.findAllByItemId(itemId));
+        return ItemMapper.mapToItemWithBookingDto(item, commentRepository.findAllByItemId(itemId));
     }
 
     @Override

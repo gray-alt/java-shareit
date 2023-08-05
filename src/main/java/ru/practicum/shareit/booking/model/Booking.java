@@ -34,11 +34,11 @@ public class Booking {
     @Enumerated(EnumType.STRING)
     BookingStatus status;
 
-    public Long getItemId() {
+    public Long getItemIdOfBooking() {
         return Optional.ofNullable(this.item).map(Item::getId).orElse(null);
     }
 
-    public Long getOwnerId() {
+    public Long getOwnerIdOfBooking() {
         return Optional.ofNullable(this.item).map(Item::getOwnerOfItemId).orElse(null);
     }
 }

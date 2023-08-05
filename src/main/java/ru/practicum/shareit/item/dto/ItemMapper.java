@@ -1,7 +1,6 @@
 package ru.practicum.shareit.item.dto;
 
 import ru.practicum.shareit.booking.dto.BookingMapper;
-import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.comment.dto.CommentMapper;
 import ru.practicum.shareit.comment.model.Comment;
 import ru.practicum.shareit.item.model.Item;
@@ -39,21 +38,8 @@ public class ItemMapper {
         return items.stream().map(ItemMapper::mapToItemDto).collect(Collectors.toList());
     }
 
-    public static ItemWithBookingDto mapToItemWithBookingDto(Item item, Booking lastBooking, Booking nextBooking,
+    public static ItemWithBookingDto mapToItemWithBookingDto(ItemWithBooking item,
                                                              Collection<Comment> comments) {
-        return ItemWithBookingDto.builder()
-                .id(item.getId())
-                .name(item.getName())
-                .description(item.getDescription())
-                .available(item.getAvailable())
-                .lastBooking(BookingMapper.mapToSimpleBookingDto(lastBooking))
-                .nextBooking(BookingMapper.mapToSimpleBookingDto(nextBooking))
-                .comments(CommentMapper.mapToCommentDto(comments))
-                .build();
-    }
-
-    public static ItemWithBookingDto mapToItemWithBookingAlternativeQueryDto(ItemWithBooking item,
-                                                                             Collection<Comment> comments) {
         return ItemWithBookingDto.builder()
                 .id(item.getId())
                 .name(item.getName())
