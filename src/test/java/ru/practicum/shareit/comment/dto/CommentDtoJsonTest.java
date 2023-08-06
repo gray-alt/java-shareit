@@ -21,7 +21,7 @@ public class CommentDtoJsonTest {
     void commentDtoTest() throws IOException {
         LocalDateTime localDateTime = LocalDateTime.now().plusMinutes(5);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'.000Z'");
 
         CommentDto commentDto = CommentDto.builder()
                 .id(1L)
