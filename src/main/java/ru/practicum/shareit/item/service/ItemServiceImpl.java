@@ -45,8 +45,7 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
 
         ItemRequest itemRequest = null;
-        if (itemDto.getRequestId() != null)
-        {
+        if (itemDto.getRequestId() != null) {
             itemRequest = itemRequestRepository.findById(itemDto.getRequestId()).orElse(null);
         }
 
