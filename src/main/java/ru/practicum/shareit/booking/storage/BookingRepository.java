@@ -42,8 +42,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "where " +
             "   bk.booker_id = ?1 " +
             "   and bk.start_date <= ?2 " +
-            "   and bk.end_date >= ?3 " +
-            "order by bk.start_date desc", nativeQuery = true)
+            "   and bk.end_date >= ?3", nativeQuery = true)
     List<Booking> findCurrentBookingsByBookerId(Long bookerId, LocalDateTime startDate, LocalDateTime endDate,
                                                       Pageable pageable);
 
@@ -58,8 +57,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "from bookings bk " +
             "where " +
             "   bk.booker_id = ?1 " +
-            "   and bk.end_date < ?2 " +
-            "order by bk.start_date desc", nativeQuery = true)
+            "   and bk.end_date < ?2", nativeQuery = true)
     List<Booking> findPastBookingsByBookerId(Long bookerId, LocalDateTime endDate, Pageable pageable);
 
     // Будущие бронирования по автору
@@ -73,8 +71,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "from bookings bk " +
             "where " +
             "   bk.booker_id = ?1 " +
-            "   and bk.start_date > ?2 " +
-            "order by bk.start_date desc", nativeQuery = true)
+            "   and bk.start_date > ?2", nativeQuery = true)
     List<Booking> findFutureBookingsByBookerId(Long bookerId, LocalDateTime startDate, Pageable pageable);
 
     // Бронирования по статусу и автору
@@ -97,8 +94,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "where " +
             "   it.owner_id = ?1 " +
             "   and bk.start_date <= ?2 " +
-            "   and bk.end_date >= ?3 " +
-            "order by bk.start_date desc", nativeQuery = true)
+            "   and bk.end_date >= ?3", nativeQuery = true)
     List<Booking> findCurrentBookingsByItemOwnerId(Long ownerId, LocalDateTime startDate, LocalDateTime endDate,
                                                          Pageable pageable);
 
@@ -115,8 +111,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "   on bk.item_id = it.id " +
             "where " +
             "   it.owner_id = ?1 " +
-            "   and bk.end_date < ?2 " +
-            "order by bk.start_date desc", nativeQuery = true)
+            "   and bk.end_date < ?2", nativeQuery = true)
     List<Booking> findPastBookingsByItemOwnerId(Long ownerId, LocalDateTime endDate, Pageable pageable);
 
     // Будущие бронирования по владельцу вещей
@@ -132,8 +127,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "   on bk.item_id = it.id " +
             "where " +
             "   it.owner_id = ?1 " +
-            "   and bk.start_date > ?2 " +
-            "order by bk.start_date desc", nativeQuery = true)
+            "   and bk.start_date > ?2", nativeQuery = true)
     List<Booking> findFutureBookingsByItemOwnerId(Long ownerId, LocalDateTime startDate, Pageable pageable);
 
     // Бронирования по статусу и владельцу вещей

@@ -27,7 +27,6 @@ import ru.practicum.shareit.user.storage.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -45,8 +44,12 @@ public class ItemServiceImpl implements ItemService {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Не найден пользователь с id " + ownerId));
 
-        ItemRequest itemRequest = itemRequestRepository.findById(
-                Optional.ofNullable(itemDto.getRequestId()).orElse(0L)).orElse(null);
+        ItemRequest itemRequest = null;
+        if (itemDto.getRequestId() != null)
+        {
+            itemRequest = itemRequestRepository.findById(itemDto.getRequestId()).orElse(null);
+        }
+
 
         Item item = itemRepository.save(ItemMapper.mapToItem(itemDto, owner, itemRequest));
         return ItemMapper.mapToItemDto(item);
@@ -99,10 +102,8 @@ public class ItemServiceImpl implements ItemService {
         if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException("Не найден пользователь с id " + ownerId);
         }
-        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").ascending());
-
         Collection<ItemWithBooking> items = itemWithBookingRepository.findItemWithBookingByOwnerId(ownerId,
-                LocalDateTime.now(), pageRequest);
+                LocalDateTime.now(), getPageRequest(from, size));
 
         Collection<Comment> allComments = commentRepository.findAllByItemIdIn(
                 items.stream().map(ItemWithBooking::getId).collect(Collectors.toList()));
@@ -139,8 +140,7 @@ public class ItemServiceImpl implements ItemService {
         if (textForSearch.isEmpty()) {
             return new ArrayList<>();
         }
-        PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").ascending());
-        Collection<Item> items = itemRepository.findAllBySearch(textForSearch, pageRequest);
+        Collection<Item> items = itemRepository.findAllBySearch(textForSearch, getPageRequest(from, size));
         return ItemMapper.mapToItemDto(items);
     }
 
@@ -161,5 +161,9 @@ public class ItemServiceImpl implements ItemService {
                 LocalDateTime.now()));
 
         return CommentMapper.mapToCommentDto(comment);
+    }
+
+    private PageRequest getPageRequest(int from, int size) {
+        return PageRequest.of(from > 0 ? from / size : 0, size, Sort.by("id").ascending());
     }
 }

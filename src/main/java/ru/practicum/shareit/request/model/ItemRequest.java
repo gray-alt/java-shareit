@@ -29,7 +29,7 @@ public class ItemRequest {
     User requestor;
     @Column(name = "create_date")
     LocalDateTime created;
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
     Set<Item> items = new HashSet<>();
 }

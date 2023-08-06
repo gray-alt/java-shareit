@@ -1,14 +1,12 @@
 package ru.practicum.shareit.request.dto;
 
+import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ItemRequestMapper {
@@ -21,12 +19,15 @@ public class ItemRequestMapper {
     }
 
     public static ItemRequestDto mapToItemRequestDto(ItemRequest itemRequest) {
+        Set<ItemDto> items = new HashSet<>();
+        if (itemRequest.getItems() != null) {
+            items = itemRequest.getItems().stream().map(ItemMapper::mapToItemDto).collect(Collectors.toSet());
+        }
         return ItemRequestDto.builder()
                 .id(itemRequest.getId())
                 .description(itemRequest.getDescription())
                 .created(itemRequest.getCreated())
-                .items(Optional.ofNullable(itemRequest.getItems()).orElse(new HashSet<>())
-                        .stream().map(ItemMapper::mapToItemDto).collect(Collectors.toSet()))
+                .items(items)
                 .build();
     }
 

@@ -110,8 +110,6 @@ public interface ItemWithBookingRepository extends JpaRepository<ItemWithBooking
             "            ) as n_bk " +
             "   on it.id = n_bk.item_id " +
             "where " +
-            "   it.owner_id = ?1 " +
-            "order by " +
-            "   it.id", nativeQuery = true)
+            "   it.owner_id = ?1", nativeQuery = true)
     List<ItemWithBooking> findItemWithBookingByOwnerId(Long ownerId, LocalDateTime date, Pageable pageable);
 }
