@@ -2,11 +2,10 @@ package ru.practicum.shareit.item.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import java.util.Objects;
 import java.util.Optional;
 
 @AllArgsConstructor
@@ -36,30 +35,5 @@ public class Item {
 
     public Long getOwnerOfItemId() {
         return Optional.ofNullable(this.owner).map(User::getId).orElse(null);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Item item = (Item) o;
-        return Objects.equals(id, item.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return "Item{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", available=" + available +
-                ", owner=" + owner +
-                ", request=" + request +
-                '}';
     }
 }

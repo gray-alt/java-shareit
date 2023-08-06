@@ -24,7 +24,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto updateUser(Long userId, UserDto userDto) {
-        if (userRepository.existsByEmailAndIdNot(userDto.getEmail(), userId)) {
+        if (userRepository.existsByEmailAndIdIsNot(userDto.getEmail(), userId)) {
             throw new AlreadyExistException("Пользователь уже существует с email " + userDto.getEmail());
         }
         User foundUser = userRepository.findById(userId)

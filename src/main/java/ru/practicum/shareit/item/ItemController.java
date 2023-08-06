@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.comment.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -8,11 +9,14 @@ import ru.practicum.shareit.item.dto.ItemWithBookingDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.Collection;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/items")
+@Validated
 public class ItemController {
     private final ItemService itemService;
 
@@ -32,19 +36,22 @@ public class ItemController {
     @GetMapping("/{itemId}")
     public ItemWithBookingDto getItemById(@RequestHeader(name = "X-Sharer-User-Id") Long userId,
                                           @PathVariable Long itemId) {
-        //return itemService.getItemById(itemId, userId);
-        return itemService.getItemByIdAlternativeQuery(itemId, userId);
+        return itemService.getItemById(itemId, userId);
     }
 
     @GetMapping
-    public Collection<ItemWithBookingDto> getAllItemsBuOwnerId(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId) {
-        //return itemService.getAllItemsByOwnerId(ownerId);
-        return itemService.getAllItemsByOwnerIdAlternativeQuery(ownerId);
+    public Collection<ItemWithBookingDto> getAllItemsByOwnerId(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId,
+                                                               @RequestParam(defaultValue = "0")
+                                                               @PositiveOrZero int from,
+                                                               @RequestParam(defaultValue = "10") @Positive int size) {
+        return itemService.getAllItemsByOwnerId(ownerId, from, size);
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> getItemsBySearch(@RequestParam(name = "text") String textForSearch) {
-        return itemService.getItemsBySearch(textForSearch);
+    public Collection<ItemDto> getItemsBySearch(@RequestParam(name = "text") String textForSearch,
+                                                @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                                @RequestParam(defaultValue = "10") @Positive int size) {
+        return itemService.getItemsBySearch(textForSearch, from, size);
     }
 
     @PostMapping("/{itemId}/comment")

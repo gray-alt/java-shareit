@@ -1,11 +1,12 @@
 package ru.practicum.shareit.item.storage;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import ru.practicum.shareit.item.model.ItemWithBooking;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface ItemWithBookingRepository extends JpaRepository<ItemWithBooking, Long> {
@@ -109,8 +110,6 @@ public interface ItemWithBookingRepository extends JpaRepository<ItemWithBooking
             "            ) as n_bk " +
             "   on it.id = n_bk.item_id " +
             "where " +
-            "   it.owner_id = ?1 " +
-            "order by " +
-            "   it.id", nativeQuery = true)
-    Collection<ItemWithBooking> findItemWithBookingByOwnerId(Long ownerId, LocalDateTime date);
+            "   it.owner_id = ?1", nativeQuery = true)
+    List<ItemWithBooking> findItemWithBookingByOwnerId(Long ownerId, LocalDateTime date, Pageable pageable);
 }
