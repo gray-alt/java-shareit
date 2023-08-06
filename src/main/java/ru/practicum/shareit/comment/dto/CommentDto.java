@@ -21,6 +21,6 @@ public class CommentDto {
     @NotBlank(message = "Отзыв не может быть пустым")
     String text;
     String authorName;
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.000'Z'")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     LocalDateTime created;
 }
