@@ -9,7 +9,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import ru.practicum.shareit.exception.AlreadyExistException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.service.UserService;
 
 import javax.transaction.Transactional;
 
