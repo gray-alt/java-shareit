@@ -28,8 +28,7 @@ public class WebClientConfig {
                 .requestFactory(HttpComponentsClientHttpRequestFactory::new)
                 .build();
 
-        BookingClient bookingClient = new BookingClient(restTemplate);
-        return bookingClient;
+        return new BookingClient(restTemplate);
     }
 
     @Bean
@@ -39,8 +38,7 @@ public class WebClientConfig {
                 .requestFactory(HttpComponentsClientHttpRequestFactory::new)
                 .build();
 
-        ItemClient itemClient = new ItemClient(restTemplate);
-        return itemClient;
+        return new ItemClient(restTemplate);
     }
 
     @Bean
@@ -50,8 +48,7 @@ public class WebClientConfig {
                 .requestFactory(HttpComponentsClientHttpRequestFactory::new)
                 .build();
 
-        ItemRequestClient itemRequestClient = new ItemRequestClient(restTemplate);
-        return itemRequestClient;
+        return new ItemRequestClient(restTemplate);
     }
 
     @Bean
@@ -61,7 +58,6 @@ public class WebClientConfig {
                 .requestFactory(HttpComponentsClientHttpRequestFactory::new)
                 .build();
 
-        UserClient userClient = new UserClient(restTemplate);
-        return userClient;
+        return new UserClient(restTemplate);
     }
 }
