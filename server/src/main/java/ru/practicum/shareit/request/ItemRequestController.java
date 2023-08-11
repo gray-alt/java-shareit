@@ -11,7 +11,6 @@ import java.util.Collection;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(path = "/requests")
-@Validated
 public class ItemRequestController {
     private final ItemRequestService itemRequestService;
 
